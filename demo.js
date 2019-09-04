@@ -2,6 +2,8 @@
 var gl = null;
 var program;
 
+var canvas = document.getElementById('demo-canvas');
+
 var perspectiveMatrix;
 var viewMatrix;
 var droneWorldMatrix;
@@ -19,9 +21,13 @@ var cameraAngle = 180;
 var cameraDelta = 0.5;
 
 var droneVao;
-
-var lastTime = (new Date).getTime() - 1000.0;
 var droneRotDelta = 50.0;
+
+var maxFps = 60
+var loopTime = 1000.0 / maxFps;
+var tickTime = 1000.0 / 60.0;
+var lastTime = 0;
+var timeDelta = 0;
 
 var vertexShaderSource = `#version 300 es
 
@@ -85,7 +91,7 @@ function logError(err) {
 }
 
 function loadModel() {
-    droneWorldMatrix = utils.MakeWorld(0, 10, 30, 0, 90, 0, 1);
+    droneWorldMatrix = utils.MakeWorld(0, 12, 30, 0, 90, 0, 1);
 }
 
 function loadShaders() {
@@ -106,12 +112,12 @@ function initBuffers() {
     gl.enableVertexAttribArray(positionAttributeLocation);
     gl.vertexAttribPointer(positionAttributeLocation, 3, gl.FLOAT, false, 0, 0);
 
-  var colorAttributeLocation = gl.getAttribLocation(program, "v_color");
-  var colorBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(droneColors), gl.STATIC_DRAW);
-  gl.enableVertexAttribArray(colorAttributeLocation);
-  gl.vertexAttribPointer(colorAttributeLocation, 3, gl.FLOAT, false, 0, 0);
+    var colorAttributeLocation = gl.getAttribLocation(program, "v_color");
+    var colorBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(droneColors), gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(colorAttributeLocation);
+    gl.vertexAttribPointer(colorAttributeLocation, 3, gl.FLOAT, false, 0, 0);
 
     indexBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
@@ -156,45 +162,8 @@ function initInteraction(){
     window.addEventListener("keydown", keyFunction, false);
 }
 
-function animate() {
-    var currentTime = (new Date).getTime();
-    var droneDelta = (droneRotDelta * (currentTime - lastTime)) / 1000.0;
-
-    var droneRotateMatrix = utils.MakeRotateXYZMatrix(droneDelta, 0, 0);
-    droneWorldMatrix = utils.multiplyMatrices(droneWorldMatrix, droneRotateMatrix);
-
-    lastTime = currentTime;               
-}
-
-function drawScene() {
-    animate();
-
-    gl.clearColor(0.85, 0.85, 0.85, 1.0);
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-    aspectRatio = gl.canvas.width / gl.canvas.height;
-
-    var perspectiveMatrix = utils.MakePerspective(verticalFov, aspectRatio, nearDist, farDist);
-    var viewMatrix = utils.MakeView(cameraX, cameraY, cameraZ, cameraElev, cameraAngle);
-
-    var droneWvMatrix = utils.multiplyMatrices(viewMatrix, droneWorldMatrix);
-    var droneWvpMatrix = utils.multiplyMatrices(perspectiveMatrix, droneWvMatrix);
-
-    gl.uniformMatrix4fv(matrixLocation, gl.FALSE, utils.transposeMatrix(droneWvpMatrix));
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-    gl.bindVertexArray(droneVao);
-
-    gl.drawElements(gl.TRIANGLES, droneIndices.length, gl.UNSIGNED_SHORT, 0);
-
-    window.requestAnimationFrame(drawScene);
-}
-
 function init() {
     log('Initializing...');
-
-    var canvas = document.getElementById('demo-canvas');
-    var w = canvas.clientWidth;
-    var h = canvas.clientHeight;
 
     gl = canvas.getContext('webgl2');
     if (!gl) {
@@ -205,24 +174,71 @@ function init() {
     gl.enable(gl.CULL_FACE);
     gl.enable(gl.DEPTH_TEST);
 
+    loadModel();
+    loadShaders();
+
+    initBuffers();
+    initInteraction();
+}
+
+function update() {
+    var droneDelta = (droneRotDelta * tickTime) / 1000.0;
+
+    var droneRotateMatrix = utils.MakeRotateXYZMatrix(droneDelta, 0, 0);
+    droneWorldMatrix = utils.multiplyMatrices(droneWorldMatrix, droneRotateMatrix);
+}
+
+function draw() {
     utils.resizeCanvasToDisplaySize(gl.canvas);
 
-    gl.clearColor(1.0, 1.0, 1.0, 1.0);
-    gl.viewport(0.0, 0.0, w, h);
+    gl.viewport(0.0, 0.0, canvas.clientWidth, canvas.clientHeight);
 
-    loadModel()
-    loadShaders()
+    gl.clearColor(0.85, 0.85, 0.85, 1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    initBuffers()
+    var aspectRatio = gl.canvas.width / gl.canvas.height;
 
-    initInteraction()
+    var perspectiveMatrix = utils.MakePerspective(verticalFov, aspectRatio, nearDist, farDist);
+    var viewMatrix = utils.MakeView(cameraX, cameraY, cameraZ, cameraElev, cameraAngle);
 
-    drawScene()
+    var droneWvMatrix = utils.multiplyMatrices(viewMatrix, droneWorldMatrix);
+    var droneWvpMatrix = utils.multiplyMatrices(perspectiveMatrix, droneWvMatrix);
+
+    gl.uniformMatrix4fv(matrixLocation, gl.FALSE, utils.transposeMatrix(droneWvpMatrix));
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+    gl.bindVertexArray(droneVao);
+    gl.drawElements(gl.TRIANGLES, droneIndices.length, gl.UNSIGNED_SHORT, 0);
+}
+
+function loop(currTime) {
+    if (currTime < lastTime + loopTime) {
+        requestAnimationFrame(loop);
+        return;
+    }
+
+    timeDelta += currTime - lastTime;
+
+    while (timeDelta >= tickTime) {
+        update();
+        timeDelta -= tickTime;
+    }
+
+    lastTime = currTime;
+
+    draw();
+
+    window.requestAnimationFrame(loop);
+}
+
+function start() {
+    log('Starting demo...');
+    window.requestAnimationFrame(loop);
 }
 
 function main() {
     try {
         init();
+        start();
     }
     catch (err) {
         logError(err);
