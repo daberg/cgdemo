@@ -101,7 +101,6 @@ createProgram:function(gl, vertexShader, fragmentShader) {
 		path to the shader's text (url)
 
 	*/
-
 	loadFile: function (url, data, callback, errorCallback) {
 		// Set up an synchronous request! Important!
 		var request = new XMLHttpRequest();
@@ -110,61 +109,44 @@ createProgram:function(gl, vertexShader, fragmentShader) {
 		// Hook the event that gets called as the request progresses
 		request.onreadystatechange = function () {
 			// If the request is "DONE" (completed or failed) and if we got HTTP status 200 (OK)
-			
-				
 			if (request.readyState == 4 && request.status == 200) {
-					callback(request.responseText, data)
-				//} else { // Failed
-				//	errorCallback(url);
+				callback(request.responseText, data)
 			}
-			
+            else {
+                errorCallback(url);
+            }
 		};
 
 		request.send(null);    
 	},
 
 	loadFiles: function (urls, callback, errorCallback) {
-    var numUrls = urls.length;
-    var numComplete = 0;
-    var result = [];
+        var numUrls = urls.length;
+        var numComplete = 0;
+        var result = [];
+        var failedUrls = [];
 
-		// Callback for a single file
-		function partialCallback(text, urlIndex) {
+		function singleCallback(text, urlIndex) {
 			result[urlIndex] = text;
 			numComplete++;
-
-			// When all files have downloaded
-			if (numComplete == numUrls) {
-				callback(result);
-			}
 		}
+
+        function singleErrorCallback(url) {
+            failedUrls.push(url);
+        }
 
 		for (var i = 0; i < numUrls; i++) {
-			this.loadFile(urls[i], i, partialCallback, errorCallback);
+			this.loadFile(urls[i], i, singleCallback, singleErrorCallback);
 		}
+
+		if (numComplete == numUrls) {
+            callback(result);
+		}
+        else {
+            errorCallback(failedUrls);
+        }
 	},
 
-	// loadFiles: function (urls, gl, callback, errorCallback) {
- //    var numUrls = urls.length;
- //    var numComplete = 0;
- //    var result = [];
-
-	// 	// Callback for a single file
-	// 	function partialCallback(text, urlIndex) {
-	// 		result[urlIndex] = text;
-	// 		numComplete++;
-
-	// 		// When all files have downloaded
-	// 		if (numComplete == numUrls) {
-	// 			callback(gl,result);
-	// 		}
-	// 	}
-
-	// 	for (var i = 0; i < numUrls; i++) {
-	// 		this.loadFile(urls[i], i, partialCallback, errorCallback);
-	// 	}
-	// },
-	
 // *** TEXTURE UTILS (to solve problems with non power of 2 textures in webGL
 
 	getTexture: function(context, image_URL){
