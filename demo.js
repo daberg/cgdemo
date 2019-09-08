@@ -30,38 +30,48 @@ var demo = (function() {
     //*** Helper functions ***//
 
     function initInteraction() {
-        var keyFunction =function(e) {
-            if (e.keyCode == 37) {  // Left arrow
-                cameraX-=cameraDelta;
+        var callbacks = {
+            37: function() {
+                cameraX -= cameraDelta;            // Left arrow 
+            },
+            39: function() {
+                cameraX += cameraDelta;            // Right arrow 
+            },
+            38: function() {
+                cameraZ -= cameraDelta;            // Up arrow 
+            },
+            40: function() {
+                cameraZ += cameraDelta;            // Down arrow 
+            },
+            107: function() {
+                cameraY += cameraDelta;            // Add 
+            },
+            107: function() {
+                cameraY -= cameraDelta;            // Subtract 
+            },
+            65: function() {
+                cameraAngle -= cameraDelta * 10.0; // a 
+            },
+            68: function() {
+                cameraAngle += cameraDelta * 10.0; // d 
+            },
+            87: function() {
+                cameraElev += cameraDelta * 10.0;  // w 
+            },
+            83: function() {
+                cameraElev -= cameraDelta * 10.0;  // s 
             }
-            if (e.keyCode == 39) {  // Right arrow
-                cameraX+=cameraDelta;
-            }
-            if (e.keyCode == 38) {  // Up arrow
-                cameraZ-=cameraDelta;
-            }
-            if (e.keyCode == 40) {  // Down arrow
-                cameraZ+=cameraDelta;
-            }
-            if (e.keyCode == 107) { // Add
-                cameraY+=cameraDelta;
-            }
-            if (e.keyCode == 109) { // Subtract
-                cameraY-=cameraDelta; }
-            if (e.keyCode == 65) {  // a
-                cameraAngle-=cameraDelta*10.0;
-            }
-            if (e.keyCode == 68) {  // d
-                cameraAngle+=cameraDelta*10.0;
-            }
-            if (e.keyCode == 87) {  // w
-                cameraElev+=cameraDelta*10.0;
-            }
-            if (e.keyCode == 83) {  // s
-                cameraElev-=cameraDelta*10.0;
-            }
-        }
-        window.addEventListener("keydown", keyFunction, false);
+        };
+        
+        window.addEventListener(
+            "keydown",
+            function(e) {
+                if (e.keyCode in callbacks) {
+                    callbacks[e.keyCode]();
+                }
+            },
+            false
+        );
     }
 
     function init() {
