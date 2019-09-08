@@ -138,7 +138,7 @@ var demo = (function() {
         window.requestAnimationFrame(loop);
     }
 
-    pub = {};
+    var pub = {};
 
     pub.main = function() {
         init();
