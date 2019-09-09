@@ -1,14 +1,10 @@
 var drone = (function() {
-    /*** Private variables that public methods are closing over ***/
-
     var shaderPaths = [
         "drone-vs.glsl",
         "drone-fs.glsl"
     ].map(name => config.shaderDirPath + name);
 
     var program = null;
-
-    /*** Collection of public methods ***/
 
     var pub = {};
 
@@ -76,35 +72,10 @@ var drone = (function() {
         }
 
         this.loadShaders = function() {
-            if (program)
-                return;
-
-            var gl = graphics.getContext();
-            var vShaderCode, fShaderCode;
-            var success;
-
-            utils.loadFiles(
-                shaderPaths,
-                function(shaderCodeList) {
-                    success = true;
-                    vShaderCode = shaderCodeList[0];
-                    fShaderCode = shaderCodeList[1];
-                },
-                function(urls) {
-                    success = false;
-                    urls.forEach(function(url) {
-                        log.logError("Could not fetch shader at: " + url);
-                    });
-                });
-
-            if (!success) {
-                throw new Error("Could not load drone shaders");
-            }
-
-            var vertexShader = utils.createShader(gl, gl.VERTEX_SHADER, vShaderCode);
-            var fragmentShader = utils.createShader(gl, gl.FRAGMENT_SHADER, fShaderCode);
-
-            program = utils.createProgram(gl, vertexShader, fragmentShader);
+            program = program || utils.loadShaders(
+                graphics.getContext(),
+                shaderPaths
+            );
         }
 
         this.init = function() {
@@ -118,11 +89,11 @@ var drone = (function() {
 
             var wvMatrix = utils.multiplyMatrices(viewMatrix, worldMatrix);
             var wvpMatrix = utils.multiplyMatrices(perspectiveMatrix, wvMatrix);
-    
+
             gl.useProgram(program);
-    
+
             gl.uniformMatrix4fv(matrixLocation, gl.FALSE, utils.transposeMatrix(wvpMatrix));
-    
+
             gl.bindVertexArray(vao);
             gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
         }

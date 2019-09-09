@@ -1,99 +1,11 @@
 var utils = {
-    createAndCompileShaders: function(gl, shaderText) {
-
-      var vertexShader = utils.createShader(gl, gl.VERTEX_SHADER, shaderText[0]);
-      var fragmentShader = utils.createShader(gl, gl.FRAGMENT_SHADER, shaderText[1]);
-
-      var program = utils.createProgram(gl, vertexShader, fragmentShader);
-
-      return program;
-    },
-
-    createShader: function(gl, type, source) {
-      var shader = gl.createShader(type);
-      gl.shaderSource(shader, source);
-      gl.compileShader(shader);
-      var success = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
-      if (success) {
-        return shader;
-      }else{
-        console.log(gl.getShaderInfoLog(shader));  // eslint-disable-line
-        if(type == gl.VERTEX_SHADER){
-            alert("ERROR IN VERTEX SHADER: " + gl.getShaderInfoLog(vertexShader));
-        }
-        if(type == gl.FRAGMENT_SHADER){
-            alert("ERROR IN FRAGMENT SHADER: " + gl.getShaderInfoLog(vertexShader));
-        }
-        gl.deleteShader(shader);
-        throw "could not compile shader:" + gl.getShaderInfoLog(shader);
-      }
-    },
-
-    createProgram: function(gl, vertexShader, fragmentShader) {
-      var program = gl.createProgram();
-      gl.attachShader(program, vertexShader);
-      gl.attachShader(program, fragmentShader);
-      gl.linkProgram(program);
-      var success = gl.getProgramParameter(program, gl.LINK_STATUS);
-      if (success) {
-        return program;
-      }else{
-         throw ("program filed to link:" + gl.getProgramInfoLog (program));
-        console.log(gl.getProgramInfoLog(program));  // eslint-disable-line
-        gl.deleteProgram(program);
-        return undefined;
-      }
-    },
-
-     resizeCanvasToDisplaySize: function(canvas, multiplier) {
-      multiplier = multiplier || 1;
-      const width  = canvas.clientWidth  * multiplier | 0;
-      const height = canvas.clientHeight * multiplier | 0;
-      if (canvas.width !== width ||  canvas.height !== height) {
-        canvas.width  = width;
-        canvas.height = height;
-        return true;
-      }
-      return false;
-    },
-
-    // Function to load a 3D model in JSON format
-    get_json: function(url, func) {
-        var xmlHttp = new XMLHttpRequest();
-        xmlHttp.open("GET", url, false); // if true == asynchronous...
-        xmlHttp.onreadystatechange = function() {
-            if (xmlHttp.readyState == 4 && xmlHttp.status==200) {
-                // The file is loaded. Parse it as JSON and launch function
-                func(JSON.parse(xmlHttp.responseText));
-            }
-        };
-        // Send the request
-        xmlHttp.send();
-    },
-
-    // Function to convert decimal value of colors
-    decimalToHex: function(d, padding) {
-        var hex = Number(d).toString(16);
-        padding = typeof (padding) === "undefined" || padding === null ? padding = 2 : padding;
-
-        while (hex.length < padding) {
-            hex = "0" + hex;
-        }
-
-        return hex;
-    },
-
-    /** Shaders utils **/
-
     loadFile: function (url, data, callback, errorCallback) {
-        // Set up an synchronous request! Important!
         var request = new XMLHttpRequest();
         request.open('GET', url, false);
 
         // Hook the event that gets called as the request progresses
         request.onreadystatechange = function () {
-            // If the request is "DONE" (completed or failed) and if we got
-            // HTTP status 200 (OK)
+            // If the request was successful
             if (request.readyState == 4 && request.status == 200) {
                 callback(request.responseText, data)
             }
@@ -130,6 +42,116 @@ var utils = {
         else {
             errorCallback(failedUrls);
         }
+    },
+
+    /** Shaders utils **/
+
+    createShader: function(gl, type, source) {
+        var shader = gl.createShader(type);
+        gl.shaderSource(shader, source);
+        gl.compileShader(shader);
+
+        var success = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
+        if (success) {
+            return shader;
+        }
+        else {
+            logging.logError(gl.getShaderInfoLog(shader));
+            throw new Error("Could not compile shader");
+        }
+    },
+
+    createProgram: function(gl, vertexShader, fragmentShader) {
+        var program = gl.createProgram();
+        gl.attachShader(program, vertexShader);
+        gl.attachShader(program, fragmentShader);
+        gl.linkProgram(program);
+        var success = gl.getProgramParameter(program, gl.LINK_STATUS);
+        if (success) {
+            return program;
+        }
+        else {
+            throw new Error("Could not link program");
+            logging.logError(gl.getProgramInfoLog(program));
+            gl.deleteProgram(program);
+            return undefined;
+        }
+    },
+
+    loadShaders: function(gl, shaderPaths) {
+        var vShaderCode, fShaderCode;
+        var success;
+
+        utils.loadFiles(
+            shaderPaths,
+            function(shaderCodeList) {
+                success = true;
+                vShaderCode = shaderCodeList[0];
+                fShaderCode = shaderCodeList[1];
+            },
+            function(urls) {
+                success = false;
+                urls.forEach(function(url) {
+                    log.logError("Could not fetch shader at: " + url);
+                });
+            });
+
+        if (!success) {
+            throw new Error("Could not load shaders");
+        }
+
+        var vertexShader = utils.createShader(
+            gl,
+            gl.VERTEX_SHADER,
+            vShaderCode
+        );
+        var fragmentShader = utils.createShader(
+            gl,
+            gl.FRAGMENT_SHADER,
+            fShaderCode
+        );
+
+        return utils.createProgram(gl, vertexShader, fragmentShader);
+    },
+
+    resizeCanvasToDisplaySize: function(canvas, multiplier) {
+      multiplier = multiplier || 1;
+      const width  = canvas.clientWidth  * multiplier | 0;
+      const height = canvas.clientHeight * multiplier | 0;
+      if (canvas.width !== width ||  canvas.height !== height) {
+        canvas.width  = width;
+        canvas.height = height;
+        return true;
+      }
+      return false;
+    },
+
+    // Function to load a 3D model in JSON format
+    get_json: function(url, func) {
+        var xmlHttp = new XMLHttpRequest();
+        xmlHttp.open("GET", url, false); // if true == asynchronous...
+        xmlHttp.onreadystatechange = function() {
+            if (xmlHttp.readyState == 4 && xmlHttp.status==200) {
+                // The file is loaded. Parse it as JSON and launch function
+                func(JSON.parse(xmlHttp.responseText));
+            }
+        };
+        // Send the request
+        xmlHttp.send();
+    },
+
+    // Function to convert decimal value of colors
+    decimalToHex: function(d, padding) {
+        var hex = Number(d).toString(16);
+        padding =
+            typeof (padding) === "undefined"
+            || padding === null ? padding = 2 : padding;
+
+        while (hex.length < padding) {
+            hex = "0" + hex;
+        }
+
+        return hex;
     },
 
     /** Texture utils **/
@@ -703,7 +725,7 @@ var utils = {
 
         // Store {fovy/2} in radiants
         var halfFovyRad = this.degToRad(fovy/2);
-        
+
         // Cotangent of {fov/2}
         var ct = 1.0 / Math.tan(halfFovyRad);
 
