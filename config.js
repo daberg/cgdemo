@@ -9,3 +9,5 @@ config.tickTime   = 1000.0 / config.ticksPerSecond;
 config.updateTime = 1000.0 / config.maxFps;
 
 config.shaderDirPath = document.URL + "shaders/";
+
+config.debugging = true;
