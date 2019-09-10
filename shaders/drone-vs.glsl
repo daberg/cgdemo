@@ -8,6 +8,6 @@ uniform mat4 matrix;
 out vec3 f_color;
 
 void main() {
-  f_color = v_color;
-  gl_Position = matrix * vec4(v_position, 1.0);
+    f_color = v_color;
+    gl_Position = matrix * vec4(v_position, 1.0);
 }
