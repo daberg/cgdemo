@@ -16,53 +16,50 @@ var demo = (function() {
 
     var perspectiveMatrix;
     var nearDist = 1;
-    var farDist = 100;
+    var farDist = 10000;
     var verticalFov = 30;
-
-    var terrainProgram;
-    var terrainVao;
-    var terrainVertices;
-    var terrainIndices;
 
     var playerDrone;
     var playerDroneRotSpeed = 10.0;
+
+    var demoTerrain;
 
     //*** Helper functions ***//
 
     function initInteraction() {
         var callbacks = {
             37: function() {
-                cameraX -= cameraDelta;            // Left arrow 
+                cameraX -= cameraDelta * 5.0;      // Left arrow
             },
             39: function() {
-                cameraX += cameraDelta;            // Right arrow 
+                cameraX += cameraDelta * 5.0;      // Right arrow
             },
             38: function() {
-                cameraZ -= cameraDelta;            // Up arrow 
+                cameraZ -= cameraDelta * 5.0;      // Up arrow
             },
             40: function() {
-                cameraZ += cameraDelta;            // Down arrow 
+                cameraZ += cameraDelta * 5.0;      // Down arrow
             },
             107: function() {
-                cameraY += cameraDelta;            // Add 
+                cameraY += cameraDelta * 5.0;      // Add
             },
             107: function() {
-                cameraY -= cameraDelta;            // Subtract 
+                cameraY -= cameraDelta * 5.0;      // Subtract
             },
             65: function() {
-                cameraAngle -= cameraDelta * 10.0; // a 
+                cameraAngle -= cameraDelta * 10.0; // a
             },
             68: function() {
-                cameraAngle += cameraDelta * 10.0; // d 
+                cameraAngle += cameraDelta * 10.0; // d
             },
             87: function() {
-                cameraElev += cameraDelta * 10.0;  // w 
+                cameraElev += cameraDelta * 10.0;  // w
             },
             83: function() {
-                cameraElev -= cameraDelta * 10.0;  // s 
+                cameraElev -= cameraDelta * 10.0;  // s
             }
         };
-        
+
         window.addEventListener(
             "keydown",
             function(e) {
@@ -83,6 +80,10 @@ var demo = (function() {
         playerDrone.init();
         playerDrone.setWorldMatrix(utils.MakeWorld(0, 12, 30, 0, 90, 0, 1));
 
+        demoTerrain = terrain.generateTerrain(144, 144, 5);
+        demoTerrain.init();
+        demoTerrain.setWorldMatrix(utils.MakeWorld(0, 0, 30, 0, 0, 0, 1));
+
         initInteraction();
     }
 
@@ -93,7 +94,7 @@ var demo = (function() {
 
         gl.viewport(0.0, 0.0, canvas.clientWidth, canvas.clientHeight);
 
-        gl.clearColor(0.85, 0.85, 0.85, 1.0);
+        gl.clearColor(0.40, 0.70, 0.80, 1.0);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
         var aspectRatio = gl.canvas.width / gl.canvas.height;
@@ -102,6 +103,7 @@ var demo = (function() {
         var viewMatrix = utils.MakeView(cameraX, cameraY, cameraZ, cameraElev, cameraAngle);
 
         playerDrone.draw(viewMatrix, perspectiveMatrix);
+        demoTerrain.draw(viewMatrix, perspectiveMatrix);
     }
 
     function update() {
