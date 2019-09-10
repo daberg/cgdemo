@@ -539,7 +539,7 @@ var utils = {
     /** Model matrix operations **/
 
     // Create a transform matrix for a translation of ({dx}, {dy}, {dz}).
-    MakeTranslateMatrix: function(dx, dy, dz) {
+    makeTranslateMatrix: function(dx, dy, dz) {
         var out = this.identityMatrix();
 
         out[3]  = dx;
@@ -549,7 +549,7 @@ var utils = {
     },
 
     // Create a transform matrix for a rotation of {a} along the X axis.
-    MakeRotateXMatrix: function(a) {
+    makeRotateXMatrix: function(a) {
         var out = this.identityMatrix();
 
         var adeg = this.degToRad(a);
@@ -564,7 +564,7 @@ var utils = {
     },
 
     // Create a transform matrix for a rotation of {a} along the Y axis.
-    MakeRotateYMatrix: function(a) {
+    makeRotateYMatrix: function(a) {
 
         var out = this.identityMatrix();
 
@@ -581,7 +581,7 @@ var utils = {
     },
 
     // Create a transform matrix for a rotation of {a} along the Z axis.
-    MakeRotateZMatrix: function(a) {
+    makeRotateZMatrix: function(a) {
 
         var out = this.identityMatrix();
 
@@ -597,7 +597,7 @@ var utils = {
     },
 
     // Creates a transform matrix for proportional scale
-    MakeScaleMatrix: function(s) {
+    makeScaleMatrix: function(s) {
 
         var out = this.identityMatrix();
 
@@ -607,11 +607,11 @@ var utils = {
     },
 
     // Creates a world matrix for an object
-    MakeRotateXYZMatrix: function(rx, ry, rz, s){
+    makeRotateXYZMatrix: function(rx, ry, rz, s){
 
-        var Rx = this.MakeRotateXMatrix(ry);
-        var Ry = this.MakeRotateYMatrix(rx);
-        var Rz = this.MakeRotateZMatrix(rz);
+        var Rx = this.makeRotateXMatrix(ry);
+        var Ry = this.makeRotateYMatrix(rx);
+        var Rz = this.makeRotateZMatrix(rz);
 
         out = this.multiplyMatrices(Ry, Rz);
         out = this.multiplyMatrices(Rx, out);
@@ -622,13 +622,13 @@ var utils = {
     /** Projection Matrix operations **/
 
     // Creates a world matrix for an object.
-    MakeWorld: function(tx, ty, tz, rx, ry, rz, s){
+    makeWorld: function(tx, ty, tz, rx, ry, rz, s){
 
-        var Rx = this.MakeRotateXMatrix(ry);
-        var Ry = this.MakeRotateYMatrix(rx);
-        var Rz = this.MakeRotateZMatrix(rz);
-        var S  = this.MakeScaleMatrix(s);
-        var T =  this.MakeTranslateMatrix(tx, ty, tz);
+        var Rx = this.makeRotateXMatrix(ry);
+        var Ry = this.makeRotateYMatrix(rx);
+        var Rz = this.makeRotateZMatrix(rz);
+        var S  = this.makeScaleMatrix(s);
+        var T =  this.makeTranslateMatrix(tx, ty, tz);
 
         out = this.multiplyMatrices(Rz, S);
         out = this.multiplyMatrices(Ry, out);
@@ -668,7 +668,7 @@ var utils = {
         return dst;
     },
 
-    LookAt: function(cameraPosition, target, up, dst) {
+    lookAt: function(cameraPosition, target, up, dst) {
         dst = dst || new Float32Array(16);
         var zAxis = this.normalize(
             this.subtractVectors(cameraPosition, target));
@@ -697,7 +697,7 @@ var utils = {
 
     // Creates a view matrix. The camera is centerd in ({cx}, {cy}, {cz}).
     // It looks {ang} degrees on y axis, and {elev} degrees on the x axis.
-    MakeView: function(cx, cy, cz, elev, ang) {
+    makeView: function(cx, cy, cz, elev, ang) {
 
         var T = [];
         var Rx = [];
@@ -705,9 +705,9 @@ var utils = {
         var tmp = [];
         var out = [];
 
-        T =  this.MakeTranslateMatrix(-cx, -cy, -cz);
-        Rx = this.MakeRotateXMatrix(-elev);
-        Ry = this.MakeRotateYMatrix(-ang);
+        T =  this.makeTranslateMatrix(-cx, -cy, -cz);
+        Rx = this.makeRotateXMatrix(-elev);
+        Ry = this.makeRotateYMatrix(-ang);
 
         tmp = this.multiplyMatrices(Ry, T);
         out = this.multiplyMatrices(Rx, tmp);
@@ -719,7 +719,7 @@ var utils = {
     // {fovy} contains the vertical field-of-view in degrees.  {a} is the
     // aspect ratio.  {n} is the distance of the near plane, and {f} is the far
     // plane.
-    MakePerspective: function(fovy, a, n, f) {
+    makePerspective: function(fovy, a, n, f) {
 
         var perspective = this.identityMatrix();
 

@@ -28,35 +28,35 @@ var demo = (function() {
 
     function initInteraction() {
         var callbacks = {
-            37: function() {
-                cameraX -= cameraDelta * 5.0;      // Left arrow
-            },
-            39: function() {
-                cameraX += cameraDelta * 5.0;      // Right arrow
-            },
-            38: function() {
-                cameraZ -= cameraDelta * 5.0;      // Up arrow
-            },
-            40: function() {
-                cameraZ += cameraDelta * 5.0;      // Down arrow
-            },
-            107: function() {
-                cameraY += cameraDelta * 5.0;      // Add
-            },
-            107: function() {
-                cameraY -= cameraDelta * 5.0;      // Subtract
-            },
             65: function() {
-                cameraAngle -= cameraDelta * 10.0; // a
+                cameraX -= cameraDelta * 5.0;      // A
             },
             68: function() {
-                cameraAngle += cameraDelta * 10.0; // d
-            },
-            87: function() {
-                cameraElev += cameraDelta * 10.0;  // w
+                cameraX += cameraDelta * 5.0;      // D
             },
             83: function() {
-                cameraElev -= cameraDelta * 10.0;  // s
+                cameraZ -= cameraDelta * 5.0;      // S
+            },
+            87: function() {
+                cameraZ += cameraDelta * 5.0;      // W
+            },
+            81: function() {
+                cameraY -= cameraDelta * 5.0;      // Q
+            },
+            69: function() {
+                cameraY += cameraDelta * 5.0;      // E
+            },
+            37: function() {
+                cameraAngle -= cameraDelta * 10.0; // Left arrow
+            },                                                    
+            39: function() {                                      
+                cameraAngle += cameraDelta * 10.0; // Right arrow
+            },                                                    
+            38: function() {                                      
+                cameraElev += cameraDelta * 10.0;  // Up arrow
+            },                                                    
+            40: function() {                                      
+                cameraElev -= cameraDelta * 10.0;  // Down arrow
             }
         };
 
@@ -78,11 +78,11 @@ var demo = (function() {
 
         playerDrone = new drone.Drone();
         playerDrone.init();
-        playerDrone.setWorldMatrix(utils.MakeWorld(0, 12, 30, 0, 90, 0, 1));
+        playerDrone.setWorldMatrix(utils.makeWorld(0, 12, 30, 0, 90, 0, 1));
 
         demoTerrain = terrain.generateTerrain(144, 144, 5);
         demoTerrain.init();
-        demoTerrain.setWorldMatrix(utils.MakeWorld(0, 0, 30, 0, 0, 0, 1));
+        demoTerrain.setWorldMatrix(utils.makeWorld(0, 0, 30, 0, 0, 0, 1));
 
         initInteraction();
     }
@@ -99,8 +99,19 @@ var demo = (function() {
 
         var aspectRatio = gl.canvas.width / gl.canvas.height;
 
-        var perspectiveMatrix = utils.MakePerspective(verticalFov, aspectRatio, nearDist, farDist);
-        var viewMatrix = utils.MakeView(cameraX, cameraY, cameraZ, cameraElev, cameraAngle);
+        var perspectiveMatrix = utils.makePerspective(
+            verticalFov,
+            aspectRatio,
+            nearDist,
+            farDist
+        );
+        var viewMatrix = utils.makeView(
+            cameraX,
+            cameraY,
+            cameraZ,
+            cameraElev,
+            cameraAngle
+        );
 
         playerDrone.draw(viewMatrix, perspectiveMatrix);
         demoTerrain.draw(viewMatrix, perspectiveMatrix);
@@ -108,7 +119,7 @@ var demo = (function() {
 
     function update() {
         var droneDelta = playerDroneRotSpeed / config.ticksPerSecond;
-        var droneRotateMatrix = utils.MakeRotateXYZMatrix(droneDelta, 0, 0);
+        var droneRotateMatrix = utils.makeRotateXYZMatrix(droneDelta, 0, 0);
 
         playerDrone.setWorldMatrix(utils.multiplyMatrices(
             playerDrone.getWorldMatrix(),
