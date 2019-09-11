@@ -48,14 +48,14 @@ var demo = (function() {
             },
             37: function() {
                 cameraAngle -= cameraDelta * 10.0; // Left arrow
-            },                                                    
-            39: function() {                                      
+            },
+            39: function() {
                 cameraAngle += cameraDelta * 10.0; // Right arrow
-            },                                                    
-            38: function() {                                      
+            },
+            38: function() {
                 cameraElev += cameraDelta * 10.0;  // Up arrow
-            },                                                    
-            40: function() {                                      
+            },
+            40: function() {
                 cameraElev -= cameraDelta * 10.0;  // Down arrow
             }
         };

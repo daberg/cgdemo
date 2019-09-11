@@ -43,12 +43,11 @@ var terrain = (function (){
         this.initBuffers = function () {
             var gl = graphics.getContext();
 
+            // Use new VAO
             vao = gl.createVertexArray();
             gl.bindVertexArray(vao);
 
-            var posAttribLocation = gl.getAttribLocation(
-                program, "v_position"
-            );
+            // Initialize position buffer
             var positionBuffer = gl.createBuffer();
             gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
             gl.bufferData(
@@ -56,11 +55,16 @@ var terrain = (function (){
                 new Float32Array(vertices),
                 gl.STATIC_DRAW
             );
+            // Initialize position attribute
+            var posAttribLocation = gl.getAttribLocation(
+                program, "v_position"
+            );
             gl.enableVertexAttribArray(posAttribLocation);
             gl.vertexAttribPointer(
                 posAttribLocation, 3, gl.FLOAT, false, 0, 0
             );
 
+            // Initialize index buffer
             var indexBuffer = gl.createBuffer();
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
             gl.bufferData(
@@ -69,7 +73,7 @@ var terrain = (function (){
                 gl.STATIC_DRAW
             );
 
-            matrixLocation = gl.getUniformLocation(program, "matrix");
+            matrixLocation = gl.getUniformLocation(program, "wvp_matrix");
         }
 
         this.init = function() {

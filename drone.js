@@ -48,27 +48,56 @@ var drone = (function() {
         this.initBuffers = function() {
             var gl = graphics.getContext();
 
+            // Use new VAO
             vao = gl.createVertexArray();
             gl.bindVertexArray(vao);
 
-            var positionAttributeLocation = gl.getAttribLocation(program, "v_position");
+            // Initialize position buffer
             var positionBuffer = gl.createBuffer();
-            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+            gl.bindBuffer(
+                gl.ARRAY_BUFFER, positionBuffer
+            );
+            gl.bufferData(
+                gl.ARRAY_BUFFER,
+                new Float32Array(vertices),
+                gl.STATIC_DRAW
+            );
+            // Initialize position attribute
+            var positionAttributeLocation = gl.getAttribLocation(
+                program, "v_position"
+            );
             gl.enableVertexAttribArray(positionAttributeLocation);
-            gl.vertexAttribPointer(positionAttributeLocation, 3, gl.FLOAT, false, 0, 0);
+            gl.vertexAttribPointer(
+                positionAttributeLocation, 3, gl.FLOAT, false, 0, 0
+            );
 
-            var colorAttributeLocation = gl.getAttribLocation(program, "v_color");
+            // Initialize color buffer
             var colorBuffer = gl.createBuffer();
             gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
+            gl.bufferData(
+                gl.ARRAY_BUFFER,
+                new Float32Array(colors),
+                gl.STATIC_DRAW
+            );
+            // Initialize color attribute
+            var colorAttributeLocation = gl.getAttribLocation(
+                program, "v_color"
+            );
             gl.enableVertexAttribArray(colorAttributeLocation);
-            gl.vertexAttribPointer(colorAttributeLocation, 3, gl.FLOAT, false, 0, 0);
+            gl.vertexAttribPointer(
+                colorAttributeLocation, 3, gl.FLOAT, false, 0, 0
+            );
 
+            // Initialize index buffer
             var indexBuffer = gl.createBuffer();
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
-            matrixLocation = gl.getUniformLocation(program, "matrix");
+            gl.bufferData(
+                gl.ELEMENT_ARRAY_BUFFER,
+                new Uint16Array(indices),
+                gl.STATIC_DRAW
+            );
+
+            matrixLocation = gl.getUniformLocation(program, "wvp_matrix");
         }
 
         this.loadShaders = function() {

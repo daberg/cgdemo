@@ -2,12 +2,12 @@
 
 in vec3 v_position;
 
-uniform mat4 matrix;
+uniform mat4 wvp_matrix;
 
 out vec3 v_color;
 
 void main() {
-    gl_Position = matrix * vec4(v_position, 1.0);
+    gl_Position = wvp_matrix * vec4(v_position, 1.0);
 
     // SE purple
     if (v_position.x < 0.0 && v_position.z < 0.0)
