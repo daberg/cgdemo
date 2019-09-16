@@ -73,7 +73,7 @@ var terrain = (function (){
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
             gl.bufferData(
                 gl.ELEMENT_ARRAY_BUFFER,
-                new Uint16Array(indices),
+                new Uint32Array(indices),
                 gl.STATIC_DRAW
             );
 
@@ -112,7 +112,7 @@ var terrain = (function (){
             );
 
             gl.bindVertexArray(vao);
-            gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
+            gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_INT, 0);
         }
     }
 
@@ -153,10 +153,6 @@ var terrain = (function (){
 
         var numVertices = rowLen * colLen;
         var vertices = [numVertices * 3];
-
-        if (vertices.length > 65536) {
-            throw new Error("The specified size is too large");
-        }
 
         var offset = 0;
         for (var i = 0; i < rowLen; i++) {
