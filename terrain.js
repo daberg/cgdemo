@@ -8,14 +8,18 @@ var terrain = (function (){
 
     var pub = {};
 
-    pub.Terrain = function (vertices, indices) {
+    pub.Tile = function (vertices, indices, size, seed) {
         var vertices = vertices;
         var indices = indices;
+        var size = new Float32Array(size);
+        var seed = new Float32Array(seed);
 
         var worldMatrix;
 
         var vao;
-        var matrixLocation;
+        var wvpMatrixLocation;
+        var sizeLocation;
+        var seedLocation;
 
         this.setIndices = function(newIndices) {
             indices = newIndices;
@@ -73,7 +77,9 @@ var terrain = (function (){
                 gl.STATIC_DRAW
             );
 
-            matrixLocation = gl.getUniformLocation(program, "wvp_matrix");
+            wvpMatrixLocation = gl.getUniformLocation(program, "wvp_matrix");
+            sizeLocation = gl.getUniformLocation(program, "tile_size");
+            seedLocation = gl.getUniformLocation(program, "tile_seed");
         }
 
         this.init = function() {
@@ -89,7 +95,21 @@ var terrain = (function (){
 
             gl.useProgram(program);
 
-            gl.uniformMatrix4fv(matrixLocation, gl.FALSE, utils.transposeMatrix(wvpMatrix));
+            gl.uniformMatrix4fv(
+                wvpMatrixLocation,
+                gl.FALSE,
+                utils.transposeMatrix(wvpMatrix)
+            );
+
+            gl.uniform2fv(
+                sizeLocation,
+                size
+            );
+
+            gl.uniform2fv(
+                seedLocation,
+                seed
+            );
 
             gl.bindVertexArray(vao);
             gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
@@ -97,29 +117,33 @@ var terrain = (function (){
     }
 
     /**
-     * Generate a terrain mesh on the XZ plane.
-     * @param {integer} rowLen - Number of vertices per row.
-     * @param {integer} colLen - Number of vertices per column.
-     * @param {float}   step   - Distance between two adjacent vertices.
+     * Generate a terrain tile on the XZ plane, centered in the origin.
+     * @param {number[]} size - Size of the tile on the XZ plane, must be
+     *                          divisible by step
+     * @param {number}   step - Distance between two adjacent vertices
+     * @param {number[]} seed - Tile seed (corresponds to x and z coordinates
+     *                          in the universe of tiles of the specified size)
      */
-    pub.generateTerrain = function(rowLen, colLen, step) {
+    pub.generateTile = function(size, step, seed) {
         // The adopted convention is that the Z axis points North and the X
         // axis points West.
         // Rows are made of vertices with the same z coordinate, and columns
         // are made of vertices with the same x coordinate.
-        rowLen = rowLen || -1;
-        colLen = colLen || -1;
-
-        if (rowLen < 2 || colLen < 2) {
-            throw new Error("Incorrect parameters for generateTerrain");
-        }
 
         var step = step || 2.0;
 
-        // Actual terrain dimensions
+        var xLen = size[0];
+        var zLen = size[1];
+
+        // Number of vertices per row and column respectively
         // Steps are the intervals between vertices, so we subtract one
-        var zLen = (colLen - 1) * step;
-        var xLen = (rowLen - 1) * step;
+        var rowLen = size[0] / step + 1;
+        var colLen = size[1] / step + 1;
+
+        if (!utils.isInteger(rowLen) || !utils.isInteger(colLen)
+            || rowLen < 2 || colLen < 2 || step < 1) {
+            throw new Error("Incorrect parameters for generateTerrain");
+        }
 
         // Start so that the terrain is centered in the origin
         var zStart =   (xLen / 2);
@@ -178,7 +202,7 @@ var terrain = (function (){
             }
         }
 
-        return new pub.Terrain(vertices, indices);
+        return new pub.Tile(vertices, indices, size, seed);
     }
 
     return pub;

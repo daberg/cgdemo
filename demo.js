@@ -1,6 +1,8 @@
 var demo = (function() {
     //*** Private demo variables ***//
 
+    var seed;
+
     var lastTime = 0;
     var timeDelta = 0;
 
@@ -8,9 +10,9 @@ var demo = (function() {
 
     var viewMatrix;
     var cameraX = 0;
-    var cameraY = 25;
-    var cameraZ = 0;
-    var cameraElev = -15.0;
+    var cameraY = 300;
+    var cameraZ = -1200;
+    var cameraElev = -25.0;
     var cameraAngle = 180;
     var cameraDelta = 0.5;
 
@@ -23,6 +25,9 @@ var demo = (function() {
     var playerDroneRotSpeed = 10.0;
 
     var demoTerrain;
+    var tileSize = [1250, 1250];
+
+    var seed = [1, 1].map(val => utils.randomInteger(-16384, 16384));
 
     //*** Helper functions ***//
 
@@ -73,6 +78,7 @@ var demo = (function() {
 
     function init() {
         log.logMessage('Initializing');
+        log.logMessage("Demo seed: " + seed);
 
         graphics.init(canvas);
 
@@ -80,7 +86,7 @@ var demo = (function() {
         playerDrone.init();
         playerDrone.setWorldMatrix(utils.makeWorld(0, 12, 30, 0, 90, 0, 1));
 
-        demoTerrain = terrain.generateTerrain(144, 144, 5);
+        demoTerrain = terrain.generateTile(tileSize, 5, seed);
         demoTerrain.init();
         demoTerrain.setWorldMatrix(utils.makeWorld(0, 0, 30, 0, 0, 0, 1));
 

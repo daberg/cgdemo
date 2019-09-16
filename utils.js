@@ -222,6 +222,14 @@ var utils = {
 
     /* Math */
 
+    isInteger: function(number) {
+        return number % 1 === 0;
+    },
+
+    randomInteger: function(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    },
+
     degToRad: function(angle){
         return(angle*Math.PI/180);
     },
