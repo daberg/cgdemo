@@ -434,12 +434,12 @@ void main() {
 
     vec3 noise =
         + sdnoise(1.0  * freq * noise_t) * ampl
-        + sdnoise(2.0  * freq * noise_t) * ampl / 2.0
+        + sdnoise(2.0  * freq * noise_t) * ampl / 1.5
         + sdnoise(4.0  * freq * noise_t) * ampl / 2.0
-        + sdnoise(8.0  * freq * noise_t) * ampl / 8.0
-        + sdnoise(16.0 * freq * noise_t) * ampl / 16.0;
+        + sdnoise(8.0  * freq * noise_t) * ampl / 4.0
+        + sdnoise(16.0 * freq * noise_t) * ampl / 8.0;
 
-    float max_height = ampl * 31.0 / 16.0;
+    float max_height = 254.17;
     float height = noise.x - max_height;
 
     vec3 new_pos = vec3(
