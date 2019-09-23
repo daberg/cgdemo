@@ -10,7 +10,7 @@
 // Copyright (c) 2016 Stefan Gustavson. All rights reserved.
 // Distributed under the MIT license. See LICENSE file.
 // https://github.com/stegu/webgl-noise
- 
+
 // Modulo 289, optimizes to code without divisions
 vec3 mod289(vec3 x) {
   return x - floor(x * (1.0 / 289.0)) * 289.0;
@@ -429,17 +429,24 @@ void main() {
 
     vec2 noise_t = tile_seed * tile_size + v_offset;
 
-    float ampl = 100.0;
-    float freq = 1.0 / 250.0;
+    float ampl = 2.0 * 100.0;
+    float freq = 0.5 / 250.0;
+    float scaling = 2.0;
 
-    vec3 noise =
-        + sdnoise(1.0  * freq * noise_t) * ampl
-        + sdnoise(2.0  * freq * noise_t) * ampl / 1.5
-        + sdnoise(4.0  * freq * noise_t) * ampl / 2.0
-        + sdnoise(8.0  * freq * noise_t) * ampl / 4.0
-        + sdnoise(16.0 * freq * noise_t) * ampl / 8.0;
+    vec3 noise = vec3(0.0, 0.0, 0.0);
+    float max_height = 0.0;
 
-    float max_height = 254.17;
+    for(int i = 0; i < 5; i++) {
+        freq *= scaling;
+        ampl /= scaling;
+
+        noise += sdnoise(freq * noise_t)
+                 * ampl                   // Scale everything by amplitude
+                 * vec3(1.0, freq, freq); // Scale derivatives by frequency
+
+        max_height += ampl;
+    }
+
     float height = noise.x - max_height;
 
     vec3 new_pos = vec3(
