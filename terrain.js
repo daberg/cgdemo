@@ -15,11 +15,15 @@ var terrain = (function (){
         var seed = new Float32Array(seed);
 
         var worldMatrix;
+        var nWorldMatrix;
 
         var vao;
-        var wvpMatrixLocation;
         var sizeLocation;
         var seedLocation;
+        var wvpMatrixLocation;
+        var nwMatrixLocation;
+        var lightDirLocation;
+        var lightColorLocation;
 
         this.setIndices = function(newIndices) {
             indices = newIndices;
@@ -35,6 +39,9 @@ var terrain = (function (){
 
         this.setWorldMatrix = function(newWorldMatrix) {
             worldMatrix = newWorldMatrix;
+            nWorldMatrix = utils.invertMatrix(utils.transposeMatrix(
+                worldMatrix
+            ));
         }
 
         this.loadShaders = function() {
@@ -77,9 +84,12 @@ var terrain = (function (){
                 gl.STATIC_DRAW
             );
 
-            wvpMatrixLocation = gl.getUniformLocation(program, "wvp_matrix");
             sizeLocation = gl.getUniformLocation(program, "tile_size");
             seedLocation = gl.getUniformLocation(program, "tile_seed");
+            wvpMatrixLocation = gl.getUniformLocation(program, "wvp_matrix");
+            nwMatrixLocation = gl.getUniformLocation(program, "nw_matrix");
+            lightDirLocation = gl.getUniformLocation(program, 'light_dir');
+            lightColorLocation = gl.getUniformLocation(program, 'light_color');
         }
 
         this.init = function() {
@@ -87,11 +97,11 @@ var terrain = (function (){
             this.initBuffers();
         }
 
-        this.draw = function(viewMatrix, perspectiveMatrix) {
+        this.draw = function(vMatrix, pMatrix, lightDir, lightColor) {
             var gl = graphics.getContext();
 
-            var wvMatrix = utils.multiplyMatrices(viewMatrix, worldMatrix);
-            var wvpMatrix = utils.multiplyMatrices(perspectiveMatrix, wvMatrix);
+            var wvMatrix = utils.multiplyMatrices(vMatrix, worldMatrix);
+            var wvpMatrix = utils.multiplyMatrices(pMatrix, wvMatrix);
 
             gl.useProgram(program);
 
@@ -101,15 +111,17 @@ var terrain = (function (){
                 utils.transposeMatrix(wvpMatrix)
             );
 
-            gl.uniform2fv(
-                sizeLocation,
-                size
+            gl.uniformMatrix4fv(
+                nwMatrixLocation,
+                gl.FALSE,
+                utils.transposeMatrix(nWorldMatrix)
             );
 
-            gl.uniform2fv(
-                seedLocation,
-                seed
-            );
+            gl.uniform2fv(sizeLocation, size);
+            gl.uniform2fv(seedLocation, seed);
+
+            gl.uniform3fv(lightDirLocation, new Float32Array(lightDir));
+            gl.uniform3fv(lightColorLocation, new Float32Array(lightColor));
 
             gl.bindVertexArray(vao);
             gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_INT, 0);

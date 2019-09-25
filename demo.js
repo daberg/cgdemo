@@ -25,7 +25,17 @@ var demo = (function() {
     var playerDroneRotSpeed = 10.0;
 
     var demoTerrain;
-    var tileSize = [1250, 1250];
+    var tileSize = [1000, 1000];
+
+    var lightAlpha = - utils.degToRad(75); // Elev
+    var lightBeta  = - utils.degToRad(270); // Angle
+
+    var lightDir = [
+        Math.cos(lightAlpha) * Math.cos(lightBeta),
+        Math.sin(lightAlpha),
+        Math.cos(lightAlpha) * Math.sin(lightBeta)
+    ];
+    var lightColor = [1.0, 1.0, 1.0];
 
     var seed = [1, 1].map(val => utils.randomInteger(-16384, 16384));
 
@@ -34,22 +44,22 @@ var demo = (function() {
     function initInteraction() {
         var callbacks = {
             65: function() {
-                cameraX -= cameraDelta * 5.0;      // A
+                cameraX -= cameraDelta * 20.0;      // A
             },
             68: function() {
-                cameraX += cameraDelta * 5.0;      // D
+                cameraX += cameraDelta * 20.0;      // D
             },
             83: function() {
-                cameraZ -= cameraDelta * 5.0;      // S
+                cameraZ -= cameraDelta * 20.0;      // S
             },
             87: function() {
-                cameraZ += cameraDelta * 5.0;      // W
+                cameraZ += cameraDelta * 20.0;      // W
             },
             81: function() {
-                cameraY -= cameraDelta * 5.0;      // Q
+                cameraY -= cameraDelta * 20.0;      // Q
             },
             69: function() {
-                cameraY += cameraDelta * 5.0;      // E
+                cameraY += cameraDelta * 20.0;      // E
             },
             37: function() {
                 cameraAngle -= cameraDelta * 10.0; // Left arrow
@@ -86,7 +96,7 @@ var demo = (function() {
         playerDrone.init();
         playerDrone.setWorldMatrix(utils.makeWorld(0, 12, 30, 0, 90, 0, 1));
 
-        demoTerrain = terrain.generateTile(tileSize, 5, seed);
+        demoTerrain = terrain.generateTile(tileSize, 2, seed);
         demoTerrain.init();
         demoTerrain.setWorldMatrix(utils.makeWorld(0, 0, 30, 0, 0, 0, 1));
 
@@ -120,7 +130,7 @@ var demo = (function() {
         );
 
         playerDrone.draw(viewMatrix, perspectiveMatrix);
-        demoTerrain.draw(viewMatrix, perspectiveMatrix);
+        demoTerrain.draw(viewMatrix, perspectiveMatrix, lightDir, lightColor);
     }
 
     function update() {
@@ -130,6 +140,14 @@ var demo = (function() {
         playerDrone.setWorldMatrix(utils.multiplyMatrices(
             playerDrone.getWorldMatrix(),
             droneRotateMatrix
+        ));
+
+        var terrainDelta = 5.0 / config.ticksPerSecond;
+        var terrainRotateMatrix = utils.makeRotateXYZMatrix(terrainDelta, 0, 0);
+
+        demoTerrain.setWorldMatrix(utils.multiplyMatrices(
+            demoTerrain.getWorldMatrix(),
+            terrainRotateMatrix
         ));
     }
 

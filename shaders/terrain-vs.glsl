@@ -419,14 +419,17 @@ uniform vec2 tile_size;
 uniform vec2 tile_seed;
 
 uniform mat4 wvp_matrix;
+uniform mat4 nw_matrix;
 
 out vec3 v_color;
+out vec3 v_normal;
 
 void main() {
     // Displacement in the tile
     // Same as model space coordinates since model is centered in the origin
     vec2 v_offset = v_position.xz;
 
+    // Calculate noise input
     vec2 noise_t = tile_seed * tile_size + v_offset;
 
     float ampl = 2.0 * 100.0;
@@ -447,7 +450,11 @@ void main() {
         max_height += ampl;
     }
 
+    // Translate y coordinate so that it does not exceed the maximum height
     float height = noise.x - max_height;
+
+    // Calculate vertex normal from analytical derivatives
+    vec3 normal = normalize(vec3(-noise.y, 1.0, -noise.z));
 
     vec3 new_pos = vec3(
         v_position.x,
@@ -464,8 +471,10 @@ void main() {
     float y_rel = (height + max_height) / max_height;
 
     v_color = vec3(
-        0.20 + xz_rel.x / 1.5,
-        0.20 +    y_rel / 1.5,
-        0.20 + xz_rel.y / 1.5
+        0.50 + xz_rel.x / 1.5,
+        0.50 +    y_rel / 1.5,
+        0.50 + xz_rel.y / 1.5
     );
+
+    v_normal = mat3(nw_matrix) * normal;
 }
