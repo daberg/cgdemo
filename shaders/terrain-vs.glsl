@@ -444,8 +444,8 @@ void main() {
         ampl /= scaling;
 
         noise += sdnoise(freq * noise_t)
-                 * ampl                   // Scale everything by amplitude
-                 * vec3(1.0, freq, freq); // Scale derivatives by frequency
+                 * ampl                   // scale everything by amplitude
+                 * vec3(1.0, freq, freq); // scale derivatives by frequency
 
         max_height += ampl;
     }
@@ -462,6 +462,7 @@ void main() {
         v_position.z
     );
 
+    // Calculate projected position
     gl_Position = wvp_matrix * vec4(new_pos, 1.0);
 
     vec2 maxval = tile_size / 2.0;
@@ -470,11 +471,13 @@ void main() {
     vec2 xz_rel = (v_position.xz - minval) / (maxval - minval);
     float y_rel = (height + max_height) / max_height;
 
+    // Calculate ambient color, relative to position
     v_color = vec3(
         0.50 + xz_rel.x / 1.5,
         0.50 +    y_rel / 1.5,
         0.50 + xz_rel.y / 1.5
     );
 
+    // Calculate projected normal
     v_normal = mat3(nw_matrix) * normal;
 }
