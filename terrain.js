@@ -20,6 +20,7 @@ var terrain = (function (){
         var vao;
         var sizeLocation;
         var seedLocation;
+        var wMatrixLocation;
         var wvpMatrixLocation;
         var nwMatrixLocation;
         var lightDirLocation;
@@ -46,13 +47,13 @@ var terrain = (function (){
 
         this.loadShaders = function() {
             program = program || utils.loadShaders(
-                graphics.getContext(),
+                graphics.getOpenGL(),
                 shaderPaths
             );
         }
 
         this.initBuffers = function () {
-            var gl = graphics.getContext();
+            var gl = graphics.getOpenGL();
 
             // Use new VAO
             vao = gl.createVertexArray();
@@ -68,7 +69,7 @@ var terrain = (function (){
             );
             // Initialize position attribute
             var posAttribLocation = gl.getAttribLocation(
-                program, "v_position"
+                program, "v_model_pos"
             );
             gl.enableVertexAttribArray(posAttribLocation);
             gl.vertexAttribPointer(
@@ -86,8 +87,11 @@ var terrain = (function (){
 
             sizeLocation = gl.getUniformLocation(program, "tile_size");
             seedLocation = gl.getUniformLocation(program, "tile_seed");
-            wvpMatrixLocation = gl.getUniformLocation(program, "wvp_matrix");
-            nwMatrixLocation = gl.getUniformLocation(program, "nw_matrix");
+
+            wMatrixLocation = gl.getUniformLocation(program, "v_w_matrix");
+            wvpMatrixLocation = gl.getUniformLocation(program, "v_wvp_matrix");
+            nwMatrixLocation = gl.getUniformLocation(program, "n_w_matrix");
+
             lightDirLocation = gl.getUniformLocation(program, 'light_dir');
             lightColorLocation = gl.getUniformLocation(program, 'light_color');
         }
@@ -97,13 +101,19 @@ var terrain = (function (){
             this.initBuffers();
         }
 
-        this.draw = function(vMatrix, pMatrix, lightDir, lightColor) {
-            var gl = graphics.getContext();
+        this.draw = function(context) {
+            var gl = graphics.getOpenGL();
 
-            var wvMatrix = utils.multiplyMatrices(vMatrix, worldMatrix);
-            var wvpMatrix = utils.multiplyMatrices(pMatrix, wvMatrix);
+            var wvMatrix = utils.multiplyMatrices(context.vMatrix, worldMatrix);
+            var wvpMatrix = utils.multiplyMatrices(context.pMatrix, wvMatrix);
 
             gl.useProgram(program);
+
+            gl.uniformMatrix4fv(
+                wMatrixLocation,
+                gl.FALSE,
+                utils.transposeMatrix(worldMatrix)
+            );
 
             gl.uniformMatrix4fv(
                 wvpMatrixLocation,
@@ -120,8 +130,8 @@ var terrain = (function (){
             gl.uniform2fv(sizeLocation, size);
             gl.uniform2fv(seedLocation, seed);
 
-            gl.uniform3fv(lightDirLocation, new Float32Array(lightDir));
-            gl.uniform3fv(lightColorLocation, new Float32Array(lightColor));
+            gl.uniform3fv(lightDirLocation,   context.lightDir);
+            gl.uniform3fv(lightColorLocation, context.lightColor);
 
             gl.bindVertexArray(vao);
             gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_INT, 0);

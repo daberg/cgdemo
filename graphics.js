@@ -17,7 +17,7 @@ var graphics = (function() {
         gl.enable(gl.DEPTH_TEST);
     },
 
-    pub.getContext = function() {
+    pub.getOpenGL = function() {
         return gl;
     }
 

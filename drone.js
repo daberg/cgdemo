@@ -46,7 +46,7 @@ var drone = (function() {
         }
 
         this.initBuffers = function() {
-            var gl = graphics.getContext();
+            var gl = graphics.getOpenGL();
 
             // Use new VAO
             vao = gl.createVertexArray();
@@ -102,7 +102,7 @@ var drone = (function() {
 
         this.loadShaders = function() {
             program = program || utils.loadShaders(
-                graphics.getContext(),
+                graphics.getOpenGL(),
                 shaderPaths
             );
         }
@@ -113,11 +113,11 @@ var drone = (function() {
             this.initBuffers();
         }
 
-        this.draw = function(viewMatrix, perspectiveMatrix) {
-            var gl = graphics.getContext();
+        this.draw = function(context) {
+            var gl = graphics.getOpenGL();
 
-            var wvMatrix = utils.multiplyMatrices(viewMatrix, worldMatrix);
-            var wvpMatrix = utils.multiplyMatrices(perspectiveMatrix, wvMatrix);
+            var wvMatrix = utils.multiplyMatrices(context.vMatrix, worldMatrix);
+            var wvpMatrix = utils.multiplyMatrices(context.pMatrix, wvMatrix);
 
             gl.useProgram(program);
 

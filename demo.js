@@ -1,22 +1,16 @@
 var demo = (function() {
     //*** Private demo variables ***//
 
-    var seed;
+    var canvas = document.getElementById('demo-canvas');
+
+    var seed = [1, 1].map(val => utils.randomInteger(-16384, 16384));
 
     var lastTime = 0;
     var timeDelta = 0;
 
-    var canvas = document.getElementById('demo-canvas');
-
-    var viewMatrix;
-    var cameraX = 0;
-    var cameraY = 300;
-    var cameraZ = -1200;
-    var cameraElev = -25.0;
-    var cameraAngle = 180;
+    var demoCamera = new camera.Camera(0, 300, -1200, -25, 180);
     var cameraDelta = 0.5;
 
-    var perspectiveMatrix;
     var nearDist = 1;
     var farDist = 10000;
     var verticalFov = 30;
@@ -27,9 +21,8 @@ var demo = (function() {
     var demoTerrain;
     var tileSize = [1000, 1000];
 
-    var lightAlpha = - utils.degToRad(75); // Elev
+    var lightAlpha = - utils.degToRad(75);  // Elev
     var lightBeta  = - utils.degToRad(270); // Angle
-
     var lightDir = [
         Math.cos(lightAlpha) * Math.cos(lightBeta),
         Math.sin(lightAlpha),
@@ -37,41 +30,67 @@ var demo = (function() {
     ];
     var lightColor = [1.0, 1.0, 1.0];
 
-    var seed = [1, 1].map(val => utils.randomInteger(-16384, 16384));
+    var drawContext = new (function() {
+        this.cameraPos = null;
+
+        this.vMatrix = null;
+        this.pMatrix = null;
+
+        this.lightDir = lightDir;
+        this.lightColor = lightColor;
+    })();
 
     //*** Helper functions ***//
 
     function initInteraction() {
         var callbacks = {
+            // A key
             65: function() {
-                cameraX -= cameraDelta * 20.0;      // A
+                demoCamera.setX(demoCamera.getX() - cameraDelta * 20.0);
             },
+            // D key
             68: function() {
-                cameraX += cameraDelta * 20.0;      // D
+                demoCamera.setX(demoCamera.getX() + cameraDelta * 20.0);
             },
+            // S key
             83: function() {
-                cameraZ -= cameraDelta * 20.0;      // S
+                demoCamera.setZ(demoCamera.getZ() - cameraDelta * 20.0);
             },
+            // W key
             87: function() {
-                cameraZ += cameraDelta * 20.0;      // W
+                demoCamera.setZ(demoCamera.getZ() + cameraDelta * 20.0);
             },
+            // Q key
             81: function() {
-                cameraY -= cameraDelta * 20.0;      // Q
+                demoCamera.setY(demoCamera.getY() - cameraDelta * 20.0);
             },
+            // E key
             69: function() {
-                cameraY += cameraDelta * 20.0;      // E
+                demoCamera.setY(demoCamera.getY() + cameraDelta * 20.0);
             },
+            // Left arrow key
             37: function() {
-                cameraAngle -= cameraDelta * 10.0; // Left arrow
+                demoCamera.setAngle(
+                    demoCamera.getAngle() - cameraDelta * 10.0
+                );
             },
+            // Right arrow key
             39: function() {
-                cameraAngle += cameraDelta * 10.0; // Right arrow
+                demoCamera.setAngle(
+                    demoCamera.getAngle() + cameraDelta * 10.0
+                );
             },
+            // Up arrow key
             38: function() {
-                cameraElev += cameraDelta * 10.0;  // Up arrow
+                demoCamera.setElevation(
+                    demoCamera.getAngle() + cameraDelta * 10.0
+                );
             },
+            // Down arrow key
             40: function() {
-                cameraElev -= cameraDelta * 10.0;  // Down arrow
+                demoCamera.setElevation(
+                    demoCamera.getAngle() + cameraDelta * 10.0
+                );
             }
         };
 
@@ -104,7 +123,7 @@ var demo = (function() {
     }
 
     function draw() {
-        var gl = graphics.getContext();
+        var gl = graphics.getOpenGL();
 
         utils.resizeCanvasToDisplaySize(gl.canvas);
 
@@ -115,22 +134,22 @@ var demo = (function() {
 
         var aspectRatio = gl.canvas.width / gl.canvas.height;
 
-        var perspectiveMatrix = utils.makePerspective(
-            verticalFov,
-            aspectRatio,
-            nearDist,
-            farDist
-        );
-        var viewMatrix = utils.makeView(
-            cameraX,
-            cameraY,
-            cameraZ,
-            cameraElev,
-            cameraAngle
+        drawContext.pMatrix = utils.makePerspective(
+            verticalFov, aspectRatio, nearDist, farDist
         );
 
-        playerDrone.draw(viewMatrix, perspectiveMatrix);
-        demoTerrain.draw(viewMatrix, perspectiveMatrix, lightDir, lightColor);
+        drawContext.vMatrix = utils.makeView(
+            demoCamera.getX(),
+            demoCamera.getY(),
+            demoCamera.getZ(),
+            demoCamera.getElevation(),
+            demoCamera.getAngle()
+        );
+
+        drawContext.cameraPos = demoCamera.getPosition();
+
+        playerDrone.draw(drawContext);
+        demoTerrain.draw(drawContext);
     }
 
     function update() {
