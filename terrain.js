@@ -25,6 +25,7 @@ var terrain = (function (){
         var nwMatrixLocation;
         var lightDirLocation;
         var lightColorLocation;
+        var obsPosLocation;
 
         this.setIndices = function(newIndices) {
             indices = newIndices;
@@ -94,6 +95,8 @@ var terrain = (function (){
 
             lightDirLocation = gl.getUniformLocation(program, 'light_dir');
             lightColorLocation = gl.getUniformLocation(program, 'light_color');
+
+            obsPosLocation = gl.getUniformLocation(program, 'obs_w_pos');
         }
 
         this.init = function() {
@@ -132,6 +135,8 @@ var terrain = (function (){
 
             gl.uniform3fv(lightDirLocation,   context.lightDir);
             gl.uniform3fv(lightColorLocation, context.lightColor);
+
+            gl.uniform3fv(obsPosLocation, context.cameraPos);
 
             gl.bindVertexArray(vao);
             gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_INT, 0);
