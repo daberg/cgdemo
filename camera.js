@@ -42,7 +42,7 @@ var camera = (function () {
             position[2] = newZ;
         };
 
-        this.setElevation = function(newElevation) {
+        this.setElevation = function(newElev) {
             elev = newElev;
         };
 

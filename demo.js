@@ -83,13 +83,13 @@ var demo = (function() {
             // Up arrow key
             38: function() {
                 demoCamera.setElevation(
-                    demoCamera.getAngle() + cameraDelta * 10.0
+                    demoCamera.getElevation() + cameraDelta * 10.0
                 );
             },
             // Down arrow key
             40: function() {
                 demoCamera.setElevation(
-                    demoCamera.getAngle() + cameraDelta * 10.0
+                    demoCamera.getElevation() - cameraDelta * 10.0
                 );
             }
         };
