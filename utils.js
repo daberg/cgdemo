@@ -544,6 +544,25 @@ var utils = {
         return out;
     },
 
+    /* cross product of vectors [u] and  [v] */
+    crossVector3: function(u, v) {
+        var out = [
+            u[1] * v[2] - u[2] * v[1],
+            u[2] * v[0] - u[0] * v[2],
+            u[0] * v[1] - u[1] * v[0]
+        ];
+        return out;
+    },
+
+    /* cross product of vectors [u] and  [v] */
+    normalizeVector3: function(v) {
+        var len = Math.sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2]);
+        var out = [v[0]/len, v[1]/len, v[2]/len];
+
+        return out;
+    },
+
+
     /** Model matrix operations **/
 
     // Create a transform matrix for a translation of ({dx}, {dy}, {dz}).
@@ -632,8 +651,8 @@ var utils = {
     // Creates a world matrix for an object.
     makeWorld: function(tx, ty, tz, rx, ry, rz, s){
 
-        var Rx = this.makeRotateXMatrix(ry);
-        var Ry = this.makeRotateYMatrix(rx);
+        var Rx = this.makeRotateXMatrix(rx);
+        var Ry = this.makeRotateYMatrix(ry);
         var Rz = this.makeRotateZMatrix(rz);
         var S  = this.makeScaleMatrix(s);
         var T =  this.makeTranslateMatrix(tx, ty, tz);
@@ -644,6 +663,10 @@ var utils = {
         out = this.multiplyMatrices(T, out);
 
         return out;
+    },
+
+    makeNormalWorld: function(worldMatrix) {
+        return this.invertMatrix(this.transposeMatrix(worldMatrix));
     },
 
     normalize: function(v, dst) {
@@ -719,6 +742,29 @@ var utils = {
 
         tmp = this.multiplyMatrices(Ry, T);
         out = this.multiplyMatrices(Rx, tmp);
+
+        return out;
+    },
+
+    // Creates a view matrix, looking from vector c to vector a, with up vector
+    // u.
+    makeLookAt: function(c, a, u) {
+        Vz = this.normalizeVector3([c[0]-a[0], c[1]-a[1], c[2]-a[2]]);
+        Vx = this.normalizeVector3(this.crossVector3(
+            this.normalizeVector3(u), Vz
+        ));
+        Vy = this.crossVector3(Vz, Vx);
+
+        // manual inversion
+        out = [Vx[0], Vx[1], Vx[2], 0.0,
+               Vy[0], Vy[1], Vy[2], 0.0,
+               Vz[0], Vz[1], Vz[2], 0.0,
+                 0.0,   0.0,   0.0, 1.0];
+
+        nc = this.multiplyMatrixVector(out, [c[0], c[1], c[2], 0.0]);
+        out[3]  = -nc[0];
+        out[7]  = -nc[1];
+        out[11] = -nc[2];
 
         return out;
     },

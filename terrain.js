@@ -133,7 +133,7 @@ var terrain = (function (){
             gl.uniform2fv(sizeLocation, size);
             gl.uniform2fv(seedLocation, seed);
 
-            gl.uniform3fv(lightDirLocation,   context.lightDir);
+            gl.uniform3fv(lightDirLocation, context.lightDir);
             gl.uniform3fv(lightColorLocation, context.lightColor);
 
             gl.uniform3fv(obsPosLocation, context.cameraPos);

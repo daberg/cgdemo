@@ -8,7 +8,7 @@ var demo = (function() {
     var lastTime = 0;
     var timeDelta = 0;
 
-    var demoCamera = new camera.Camera(0, 300, -1200, -25, 180);
+    var demoCamera = new camera.Camera(0, 100, -300, -25, 180);
     var cameraDelta = 0.5;
 
     var nearDist = 1;
@@ -28,7 +28,7 @@ var demo = (function() {
         Math.sin(lightAlpha),
         Math.cos(lightAlpha) * Math.sin(lightBeta)
     ];
-    var lightColor = [1.0, 1.0, 1.0];
+    var lightColor = [0.7, 0.7, 0.7];
 
     var drawContext = new (function() {
         this.cameraPos = null;
@@ -42,69 +42,6 @@ var demo = (function() {
 
     //*** Helper functions ***//
 
-    function initInteraction() {
-        var callbacks = {
-            // A key
-            65: function() {
-                demoCamera.setX(demoCamera.getX() - cameraDelta * 20.0);
-            },
-            // D key
-            68: function() {
-                demoCamera.setX(demoCamera.getX() + cameraDelta * 20.0);
-            },
-            // S key
-            83: function() {
-                demoCamera.setZ(demoCamera.getZ() - cameraDelta * 20.0);
-            },
-            // W key
-            87: function() {
-                demoCamera.setZ(demoCamera.getZ() + cameraDelta * 20.0);
-            },
-            // Q key
-            81: function() {
-                demoCamera.setY(demoCamera.getY() - cameraDelta * 20.0);
-            },
-            // E key
-            69: function() {
-                demoCamera.setY(demoCamera.getY() + cameraDelta * 20.0);
-            },
-            // Left arrow key
-            37: function() {
-                demoCamera.setAngle(
-                    demoCamera.getAngle() - cameraDelta * 10.0
-                );
-            },
-            // Right arrow key
-            39: function() {
-                demoCamera.setAngle(
-                    demoCamera.getAngle() + cameraDelta * 10.0
-                );
-            },
-            // Up arrow key
-            38: function() {
-                demoCamera.setElevation(
-                    demoCamera.getElevation() + cameraDelta * 10.0
-                );
-            },
-            // Down arrow key
-            40: function() {
-                demoCamera.setElevation(
-                    demoCamera.getElevation() - cameraDelta * 10.0
-                );
-            }
-        };
-
-        window.addEventListener(
-            "keydown",
-            function(e) {
-                if (e.keyCode in callbacks) {
-                    callbacks[e.keyCode]();
-                }
-            },
-            false
-        );
-    }
-
     function init() {
         log.logMessage('Initializing');
         log.logMessage("Demo seed: " + seed);
@@ -113,13 +50,10 @@ var demo = (function() {
 
         playerDrone = new drone.Drone();
         playerDrone.init();
-        playerDrone.setWorldMatrix(utils.makeWorld(0, 12, 30, 0, 90, 0, 1));
 
         demoTerrain = terrain.generateTile(tileSize, 2, seed);
         demoTerrain.init();
         demoTerrain.setWorldMatrix(utils.makeWorld(0, 0, 30, 0, 0, 0, 1));
-
-        initInteraction();
     }
 
     function draw() {
@@ -129,21 +63,22 @@ var demo = (function() {
 
         gl.viewport(0.0, 0.0, canvas.clientWidth, canvas.clientHeight);
 
-        gl.clearColor(0.40, 0.70, 0.80, 1.0);
+        gl.clearColor(0, 0.20, 0.40, 1.0);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
         var aspectRatio = gl.canvas.width / gl.canvas.height;
 
         drawContext.pMatrix = utils.makePerspective(
-            verticalFov, aspectRatio, nearDist, farDist
+            verticalFov,
+            aspectRatio,
+            nearDist,
+            farDist
         );
 
-        drawContext.vMatrix = utils.makeView(
-            demoCamera.getX(),
-            demoCamera.getY(),
-            demoCamera.getZ(),
-            demoCamera.getElevation(),
-            demoCamera.getAngle()
+        drawContext.vMatrix = utils.makeLookAt(
+            demoCamera.getPosition(),
+            [0, 0, 0],
+            [0, 1, 0]
         );
 
         drawContext.cameraPos = demoCamera.getPosition();
@@ -152,22 +87,10 @@ var demo = (function() {
         demoTerrain.draw(drawContext);
     }
 
-    function update() {
+    function tick() {
         var droneDelta = playerDroneRotSpeed / config.ticksPerSecond;
-        var droneRotateMatrix = utils.makeRotateXYZMatrix(droneDelta, 0, 0);
-
-        playerDrone.setWorldMatrix(utils.multiplyMatrices(
-            playerDrone.getWorldMatrix(),
-            droneRotateMatrix
-        ));
-
-        var terrainDelta = 5.0 / config.ticksPerSecond;
-        var terrainRotateMatrix = utils.makeRotateXYZMatrix(terrainDelta, 0, 0);
-
-        demoTerrain.setWorldMatrix(utils.multiplyMatrices(
-            demoTerrain.getWorldMatrix(),
-            terrainRotateMatrix
-        ));
+        playerDrone.rotatePropellers();
+        //playerDrone.rotate(droneDelta);
     }
 
     function loop(currTime) {
@@ -180,7 +103,7 @@ var demo = (function() {
         lastTime = currTime;
 
         while (timeDelta >= config.tickTime) {
-            update();
+            tick();
             timeDelta -= config.tickTime;
         }
 

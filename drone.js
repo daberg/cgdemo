@@ -9,83 +9,108 @@ var drone = (function() {
     var pub = {};
 
     pub.Drone = function() {
-        var vertices;
-        var colors;
-        var indices;
+        var cx = 0;
+        var cy = 0;
+        var cz = 0;
+        var yaw = 0;
 
-        var worldMatrix;
+        var propSpeed = 1000.0;
+        var propDelta = propSpeed / config.ticksPerSecond;
+        var propRotDir = [1, -1, -1, 1];
+        var propYaw = 50;
 
-        var vao;
-        var matrixLocation;
+        var bodyVertices;
+        var bodyIndices;
+        var bodyNormals;
+
+        var propVertices;
+        var propIndices;
+        var propNormals;
+        var propTfs = new Array(4);
+
+        var diffColor;
+        var specColor;
+        var shininess;
+
+        var bodyVao;
+        var propVao;
+
+        var wMatrixLocation;
+        var wvpMatrixLocation;
+        var nwMatrixLocation;
+
+        var diffColorLocation;
+        var specColorLocation;
+        var shininessLocation;
+
+        var lightDirLocation;
+        var lightColorLocation;
+
+        var obsPosLocation;
 
         this.loadModel = function() {
-            vertices = [
-                 0.0,  20.0,  0.0,
-                -2.0,  0.0,   2.0,
-                 2.0,  0.0,   2.0,
-                 2.0,  0.0,  -2.0,
-                -2.0,  0.0,  -2.0
-            ];
+            utils.get_json(
+                config.modelDirPath + 'drone.json',
+                function(model) {
+                    bodyVertices = model.meshes[1].vertices;
+                    bodyIndices = [].concat.apply([], model.meshes[1].faces);
+                    bodyNormals = model.meshes[1].normals;
 
-            colors = [
-                1.0, 1.0, 0.0,
-                1.0, 0.0, 0.0,
-                0.0, 1.0, 0.0,
-                0.0, 0.0, 1.0,
-                0.0, 1.0, 1.0
-            ];
+                    propVertices = model.meshes[0].vertices;
+                    propIndices = [].concat.apply([], model.meshes[0].faces);
+                    propNormals = model.meshes[0].normals;
 
-            indices = [
-                0, 1, 2,
-                0, 2, 3,
-                0, 3, 4,
-                0, 4, 1,
-                4, 3, 1,
-                3, 2, 1
-            ];
-        }
+                    propTfs[0] = model.rootnode.children[0].transformation;
+                    propTfs[1] = model.rootnode.children[1].transformation;
+                    propTfs[2] = model.rootnode.children[2].transformation;
+                    propTfs[3] = model.rootnode.children[3].transformation;
+
+                    diffColor = model.materials[0].properties[1].value;
+                    specColor = model.materials[0].properties[4].value;
+                    shininess = model.materials[0].properties[6].value;
+                }
+            );
+        };
 
         this.initBuffers = function() {
             var gl = graphics.getOpenGL();
 
-            // Use new VAO
-            vao = gl.createVertexArray();
-            gl.bindVertexArray(vao);
+            // Body VAO
+            bodyVao = gl.createVertexArray();
+            gl.bindVertexArray(bodyVao);
 
             // Initialize position buffer
             var positionBuffer = gl.createBuffer();
-            gl.bindBuffer(
-                gl.ARRAY_BUFFER, positionBuffer
-            );
+            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
             gl.bufferData(
                 gl.ARRAY_BUFFER,
-                new Float32Array(vertices),
+                new Float32Array(bodyVertices),
                 gl.STATIC_DRAW
             );
             // Initialize position attribute
             var positionAttributeLocation = gl.getAttribLocation(
-                program, "v_position"
+                program, "v_model_pos"
             );
             gl.enableVertexAttribArray(positionAttributeLocation);
             gl.vertexAttribPointer(
                 positionAttributeLocation, 3, gl.FLOAT, false, 0, 0
             );
 
-            // Initialize color buffer
-            var colorBuffer = gl.createBuffer();
-            gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+            // Initialize normal buffer
+            var normalBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
             gl.bufferData(
                 gl.ARRAY_BUFFER,
-                new Float32Array(colors),
+                new Float32Array(bodyNormals),
                 gl.STATIC_DRAW
             );
-            // Initialize color attribute
-            var colorAttributeLocation = gl.getAttribLocation(
-                program, "v_color"
+            // Initialize normal attribute
+            var normalAttributeLocation = gl.getAttribLocation(
+                program, "v_model_normal"
             );
-            gl.enableVertexAttribArray(colorAttributeLocation);
+            gl.enableVertexAttribArray(normalAttributeLocation);
             gl.vertexAttribPointer(
-                colorAttributeLocation, 3, gl.FLOAT, false, 0, 0
+                normalAttributeLocation, 3, gl.FLOAT, false, 0, 0
             );
 
             // Initialize index buffer
@@ -93,47 +118,187 @@ var drone = (function() {
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
             gl.bufferData(
                 gl.ELEMENT_ARRAY_BUFFER,
-                new Uint16Array(indices),
+                new Uint16Array(bodyIndices),
                 gl.STATIC_DRAW
             );
 
-            matrixLocation = gl.getUniformLocation(program, "wvp_matrix");
-        }
+            // Propeller VAO
+            propVao = gl.createVertexArray();
+            gl.bindVertexArray(propVao);
+
+            // Initialize position buffer
+            var positionBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+            gl.bufferData(
+                gl.ARRAY_BUFFER,
+                new Float32Array(propVertices),
+                gl.STATIC_DRAW
+            );
+            // Initialize position attribute
+            var positionAttributeLocation = gl.getAttribLocation(
+                program, "v_model_pos"
+            );
+            gl.enableVertexAttribArray(positionAttributeLocation);
+            gl.vertexAttribPointer(
+                positionAttributeLocation, 3, gl.FLOAT, false, 0, 0
+            );
+
+            // Initialize normal buffer
+            var normalBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
+            gl.bufferData(
+                gl.ARRAY_BUFFER,
+                new Float32Array(propNormals),
+                gl.STATIC_DRAW
+            );
+            // Initialize normal attribute
+            var normalAttributeLocation = gl.getAttribLocation(
+                program, "v_model_normal"
+            );
+            gl.enableVertexAttribArray(normalAttributeLocation);
+            gl.vertexAttribPointer(
+                normalAttributeLocation, 3, gl.FLOAT, false, 0, 0
+            );
+
+            // Initialize index buffer
+            var indexBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+            gl.bufferData(
+                gl.ELEMENT_ARRAY_BUFFER,
+                new Uint16Array(propIndices),
+                gl.STATIC_DRAW
+            );
+
+            wMatrixLocation = gl.getUniformLocation(program, "v_w_matrix");
+            wvpMatrixLocation = gl.getUniformLocation(program, "v_wvp_matrix");
+            nwMatrixLocation = gl.getUniformLocation(program, "n_w_matrix");
+
+            diffColorLocation = gl.getUniformLocation(program, 'diff_color');
+            specColorLocation = gl.getUniformLocation(program, 'spec_color');
+            shininessLocation = gl.getUniformLocation(program, 'shininess');
+
+            lightDirLocation = gl.getUniformLocation(program, 'light_dir');
+            lightColorLocation = gl.getUniformLocation(program, 'light_color');
+
+            obsPosLocation = gl.getUniformLocation(program, 'obs_w_pos');
+        };
 
         this.loadShaders = function() {
             program = program || utils.loadShaders(
                 graphics.getOpenGL(),
                 shaderPaths
             );
-        }
+        };
 
         this.init = function() {
             this.loadModel();
             this.loadShaders();
             this.initBuffers();
-        }
+        };
 
         this.draw = function(context) {
             var gl = graphics.getOpenGL();
 
-            var wvMatrix = utils.multiplyMatrices(context.vMatrix, worldMatrix);
-            var wvpMatrix = utils.multiplyMatrices(context.pMatrix, wvMatrix);
+            var wMatrix = utils.makeWorld(cx, cy, cz, 0, yaw, 0, 0.5);
+            var wvpMatrix = utils.multiplyMatrices(
+                context.pMatrix,
+                utils.multiplyMatrices(
+                    context.vMatrix,
+                    wMatrix
+                )
+            );
+            var nwMatrix = utils.makeNormalWorld(wMatrix);
 
             gl.useProgram(program);
 
-            gl.uniformMatrix4fv(matrixLocation, gl.FALSE, utils.transposeMatrix(wvpMatrix));
+            gl.uniformMatrix4fv(
+                wMatrixLocation,
+                gl.FALSE,
+                utils.transposeMatrix(wMatrix)
+            );
 
-            gl.bindVertexArray(vao);
-            gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
-        }
+            gl.uniformMatrix4fv(
+                wvpMatrixLocation,
+                gl.FALSE,
+                utils.transposeMatrix(wvpMatrix)
+            );
 
-        this.getWorldMatrix = function() {
-            return worldMatrix;
-        }
+            gl.uniformMatrix4fv(
+                nwMatrixLocation,
+                gl.FALSE,
+                utils.transposeMatrix(nwMatrix)
+            );
 
-        this.setWorldMatrix = function(newWorldMatrix) {
-            worldMatrix = newWorldMatrix;
-        }
+            gl.uniform3fv(diffColorLocation, diffColor);
+            gl.uniform3fv(specColorLocation, specColor);
+            gl.uniform1f(shininessLocation, shininess);
+
+            gl.uniform3fv(lightDirLocation, context.lightDir);
+            gl.uniform3fv(lightColorLocation, context.lightColor);
+
+            gl.uniform3fv(obsPosLocation, context.cameraPos);
+
+            gl.bindVertexArray(bodyVao);
+            gl.drawElements(
+                gl.TRIANGLES, bodyIndices.length, gl.UNSIGNED_SHORT, 0
+            );
+
+            gl.bindVertexArray(propVao);
+
+            for (var propNum = 0; propNum < 4; propNum++) {
+                var propWMatrix = utils.multiplyMatrices(
+                    wMatrix,
+                    utils.multiplyMatrices(
+                        propTfs[propNum],
+                        utils.makeRotateYMatrix(propYaw * propRotDir[propNum])
+                    )
+                );
+                var propWvpMatrix = utils.multiplyMatrices(
+                    context.pMatrix,
+                    utils.multiplyMatrices(
+                        context.vMatrix,
+                        propWMatrix
+                    )
+                );
+                var propNwMatrix = utils.makeNormalWorld(propWMatrix);
+
+                gl.uniformMatrix4fv(
+                    wMatrixLocation,
+                    gl.FALSE,
+                    utils.transposeMatrix(propWMatrix)
+                );
+
+                gl.uniformMatrix4fv(
+                    wvpMatrixLocation,
+                    gl.FALSE,
+                    utils.transposeMatrix(propWvpMatrix)
+                );
+
+                gl.uniformMatrix4fv(
+                    nwMatrixLocation,
+                    gl.FALSE,
+                    utils.transposeMatrix(propNwMatrix)
+                );
+
+                gl.drawElements(
+                    gl.TRIANGLES, propIndices.length, gl.UNSIGNED_SHORT, 0
+                );
+            }
+        };
+
+        this.move = function(dx, dy, dz) {
+            cx = cx + dx;
+            cy = cy + dy;
+            cz = cz + dz;
+        };
+
+        this.rotate = function(delta) {
+            yaw = (yaw + delta) % 360.0;
+        };
+
+        this.rotatePropellers = function() {
+            propYaw = (propYaw + propDelta) % 360.0;
+        };
     };
 
     return pub;

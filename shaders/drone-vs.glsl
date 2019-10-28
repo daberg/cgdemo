@@ -1,13 +1,14 @@
 #version 300 es
 
-in vec3 v_position;
-in vec3 v_color;
+in vec3 v_model_pos;
+in vec3 v_model_normal;
 
-uniform mat4 wvp_matrix;
+uniform mat4 v_wvp_matrix;
+uniform mat4 n_w_matrix;
 
-out vec3 f_color;
+out vec3 v_world_normal;
 
 void main() {
-    f_color = v_color;
-    gl_Position = wvp_matrix * vec4(v_position, 1.0);
+    gl_Position = v_wvp_matrix * vec4(v_model_pos, 1.0);
+    v_world_normal = mat3(n_w_matrix) * v_model_normal;
 }
