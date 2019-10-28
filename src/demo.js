@@ -1,6 +1,6 @@
-var demo = (function() {
-    //*** Private demo variables ***//
+var demo = demo || {};
 
+demo.main = function() {
     var canvas = document.getElementById('demo-canvas');
 
     var seed = [1, 1].map(val => utils.randomInteger(-16384, 16384));
@@ -8,17 +8,17 @@ var demo = (function() {
     var lastTime = 0;
     var timeDelta = 0;
 
-    var demoCamera = new camera.Camera(0, 100, -300, -25, 180);
+    var demoCamera = new demo.camera.Camera(0, 100, -300, -25, 180);
     var cameraDelta = 0.5;
 
     var nearDist = 1;
     var farDist = 10000;
     var verticalFov = 30;
 
-    var playerDrone;
-    var playerDroneRotSpeed = 10.0;
+    var drone;
+    var droneRotSpeed = 10.0;
 
-    var demoTerrain;
+    var terrain;
     var tileSize = [1000, 1000];
 
     var lightAlpha = - utils.degToRad(75);  // Elev
@@ -40,24 +40,22 @@ var demo = (function() {
         this.lightColor = lightColor;
     })();
 
-    //*** Helper functions ***//
-
     function init() {
-        log.logMessage('Initializing');
-        log.logMessage("Demo seed: " + seed);
+        demo.log.logMessage('Initializing');
+        demo.log.logMessage("Demo seed: " + seed);
 
-        graphics.init(canvas);
+        demo.graphics.init(canvas);
 
-        playerDrone = new drone.Drone();
-        playerDrone.init();
+        drone = new demo.drone.Drone();
+        drone.init();
 
-        demoTerrain = terrain.generateTile(tileSize, 2, seed);
-        demoTerrain.init();
-        demoTerrain.setWorldMatrix(utils.makeWorld(0, 0, 30, 0, 0, 0, 1));
+        terrain = demo.terrain.generateTile(tileSize, 2, seed);
+        terrain.init();
+        terrain.setWorldMatrix(utils.makeWorld(0, 0, 30, 0, 0, 0, 1));
     }
 
     function draw() {
-        var gl = graphics.getOpenGL();
+        var gl = demo.graphics.getOpenGL();
 
         utils.resizeCanvasToDisplaySize(gl.canvas);
 
@@ -83,18 +81,16 @@ var demo = (function() {
 
         drawContext.cameraPos = demoCamera.getPosition();
 
-        playerDrone.draw(drawContext);
-        demoTerrain.draw(drawContext);
+        drone.draw(drawContext);
+        terrain.draw(drawContext);
     }
 
     function tick() {
-        var droneDelta = playerDroneRotSpeed / config.ticksPerSecond;
-        playerDrone.rotatePropellers();
-        //playerDrone.rotate(droneDelta);
+        drone.rotatePropellers();
     }
 
     function loop(currTime) {
-        if (currTime < lastTime + config.updateTime) {
+        if (currTime < lastTime + demo.config.updateTime) {
             requestAnimationFrame(loop);
             return;
         }
@@ -102,9 +98,9 @@ var demo = (function() {
         timeDelta += currTime - lastTime;
         lastTime = currTime;
 
-        while (timeDelta >= config.tickTime) {
+        while (timeDelta >= demo.config.tickTime) {
             tick();
-            timeDelta -= config.tickTime;
+            timeDelta -= demo.config.tickTime;
         }
 
         draw();
@@ -113,19 +109,10 @@ var demo = (function() {
     }
 
     function start() {
-        log.logMessage('Starting demo');
+        demo.log.logMessage('Starting demo');
         window.requestAnimationFrame(loop);
     }
 
-    var pub = {};
-
-    pub.main = function() {
-        init();
-        start();
-    };
-
-    return pub;
-})();
-
-// Initialize and run the demo
-demo.main();
+    init();
+    start();
+};

@@ -1,4 +1,6 @@
-var graphics = (function() {
+var demo = demo || {};
+    
+demo.graphics = (function() {
     var gl = null;
 
     var pub = {};

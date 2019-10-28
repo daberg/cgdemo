@@ -1,8 +1,10 @@
-var drone = (function() {
+var demo = demo || {};
+
+demo.drone = (function() {
     var shaderPaths = [
         "drone-vs.glsl",
         "drone-fs.glsl"
-    ].map(name => config.shaderDirPath + name);
+    ].map(name => demo.config.shaderDirPath + name);
 
     var program = null;
 
@@ -15,7 +17,7 @@ var drone = (function() {
         var yaw = 0;
 
         var propSpeed = 1000.0;
-        var propDelta = propSpeed / config.ticksPerSecond;
+        var propDelta = propSpeed / demo.config.ticksPerSecond;
         var propRotDir = [1, -1, -1, 1];
         var propYaw = 50;
 
@@ -27,6 +29,8 @@ var drone = (function() {
         var propIndices;
         var propNormals;
         var propTfs = new Array(4);
+
+        var wMatrix;
 
         var diffColor;
         var specColor;
@@ -50,7 +54,7 @@ var drone = (function() {
 
         this.loadModel = function() {
             utils.get_json(
-                config.modelDirPath + 'drone.json',
+                demo.config.modelDirPath + 'drone.json',
                 function(model) {
                     bodyVertices = model.meshes[1].vertices;
                     bodyIndices = [].concat.apply([], model.meshes[1].faces);
@@ -73,7 +77,7 @@ var drone = (function() {
         };
 
         this.initBuffers = function() {
-            var gl = graphics.getOpenGL();
+            var gl = demo.graphics.getOpenGL();
 
             // Body VAO
             bodyVao = gl.createVertexArray();
@@ -185,7 +189,7 @@ var drone = (function() {
 
         this.loadShaders = function() {
             program = program || utils.loadShaders(
-                graphics.getOpenGL(),
+                demo.graphics.getOpenGL(),
                 shaderPaths
             );
         };
@@ -194,12 +198,12 @@ var drone = (function() {
             this.loadModel();
             this.loadShaders();
             this.initBuffers();
+            this.move(0, 0, 0, 0);
         };
 
         this.draw = function(context) {
-            var gl = graphics.getOpenGL();
+            var gl = demo.graphics.getOpenGL();
 
-            var wMatrix = utils.makeWorld(cx, cy, cz, 0, yaw, 0, 0.5);
             var wvpMatrix = utils.multiplyMatrices(
                 context.pMatrix,
                 utils.multiplyMatrices(
@@ -286,14 +290,12 @@ var drone = (function() {
             }
         };
 
-        this.move = function(dx, dy, dz) {
+        this.move = function(dx, dy, dz, dyaw) {
             cx = cx + dx;
             cy = cy + dy;
             cz = cz + dz;
-        };
-
-        this.rotate = function(delta) {
-            yaw = (yaw + delta) % 360.0;
+            yaw = (yaw + dyaw) % 360.0;
+            wMatrix = utils.makeWorld(cx, cy, cz, 0, yaw, 0, 0.5);
         };
 
         this.rotatePropellers = function() {

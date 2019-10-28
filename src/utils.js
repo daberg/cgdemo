@@ -56,7 +56,6 @@ var utils = {
             return shader;
         }
         else {
-            log.logError(gl.getShaderInfoLog(shader));
             throw new Error("Could not compile shader");
         }
     },
@@ -72,7 +71,6 @@ var utils = {
         }
         else {
             throw new Error("Could not link program");
-            log.logError(gl.getProgramInfoLog(program));
             gl.deleteProgram(program);
             return undefined;
         }
@@ -92,7 +90,7 @@ var utils = {
             function(urls) {
                 success = false;
                 urls.forEach(function(url) {
-                    log.logError("Could not fetch shader at: " + url);
+                    console.log("Could not fetch shader at: " + url);
                 });
             });
 

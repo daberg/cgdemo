@@ -1,8 +1,10 @@
-var terrain = (function (){
+var demo = demo || {};
+
+demo.terrain = (function (){
     var shaderPaths = [
         "terrain-vs.glsl",
         "terrain-fs.glsl"
-    ].map(name => config.shaderDirPath + name);
+    ].map(name => demo.config.shaderDirPath + name);
 
     var program;
 
@@ -48,13 +50,13 @@ var terrain = (function (){
 
         this.loadShaders = function() {
             program = program || utils.loadShaders(
-                graphics.getOpenGL(),
+                demo.graphics.getOpenGL(),
                 shaderPaths
             );
         }
 
         this.initBuffers = function () {
-            var gl = graphics.getOpenGL();
+            var gl = demo.graphics.getOpenGL();
 
             // Use new VAO
             vao = gl.createVertexArray();
@@ -105,7 +107,7 @@ var terrain = (function (){
         }
 
         this.draw = function(context) {
-            var gl = graphics.getOpenGL();
+            var gl = demo.graphics.getOpenGL();
 
             var wvMatrix = utils.multiplyMatrices(context.vMatrix, worldMatrix);
             var wvpMatrix = utils.multiplyMatrices(context.pMatrix, wvMatrix);

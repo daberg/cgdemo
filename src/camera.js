@@ -1,4 +1,6 @@
-var camera = (function () {
+var demo = demo || {};
+
+demo.camera = (function () {
     var pub = {};
 
     pub.Camera = function(x, y, z, elev, angle) {

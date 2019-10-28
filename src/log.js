@@ -1,7 +1,9 @@
-var log = (function() {
+var demo = demo || {};
+
+demo.log = (function() {
     var pub = {};
 
-    if (config.debugging) {
+    if (demo.config.debugging) {
         pub.logMessage = function(msg) {
             console.log("[DEMO]" + msg);
         }

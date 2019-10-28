@@ -1,4 +1,6 @@
-var input = (function () {
+var demo = demo || {};
+
+demo.input = (function () {
     var pub = {};
 
     pub.fwd = false;
@@ -32,7 +34,6 @@ var input = (function () {
         // E key
         69: function(state) {
             pub.uwd = state;
-            console.log(state);
         }
     };
 
