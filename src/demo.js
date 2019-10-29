@@ -8,15 +8,20 @@ demo.main = function() {
     var lastTime = 0;
     var timeDelta = 0;
 
-    var demoCamera = new demo.camera.Camera(0, 100, -300, -25, 180);
-    var cameraDelta = 0.5;
+    var camera = new demo.camera.Camera(0, 100, -300, -25, 180);
+    var cameraDist = 250;
+    var cameraElev = 100;
 
     var nearDist = 1;
     var farDist = 10000;
     var verticalFov = 30;
 
     var drone;
-    var droneRotSpeed = 10.0;
+
+    var droneVel = 100;
+    var dronePosDelta = droneVel / demo.config.ticksPerSecond;
+    var droneAngVel = 30;
+    var droneYawDelta = droneAngVel / demo.config.ticksPerSecond;
 
     var terrain;
     var tileSize = [1000, 1000];
@@ -74,12 +79,12 @@ demo.main = function() {
         );
 
         drawContext.vMatrix = utils.makeLookAt(
-            demoCamera.getPosition(),
-            [0, 0, 0],
+            camera.getPosition(),
+            [drone.getX(), drone.getY(), drone.getZ()],
             [0, 1, 0]
         );
 
-        drawContext.cameraPos = demoCamera.getPosition();
+        drawContext.cameraPos = camera.getPosition();
 
         drone.draw(drawContext);
         terrain.draw(drawContext);
@@ -87,6 +92,28 @@ demo.main = function() {
 
     function tick() {
         drone.rotatePropellers();
+
+        droneDir = [
+            - Math.sin(utils.degToRad(drone.getYaw())),
+              Math.cos(utils.degToRad(drone.getYaw()))
+        ];
+
+        dx = (demo.input.fwd - demo.input.bwd) * dronePosDelta * droneDir[0];
+        dy = (demo.input.uwd - demo.input.dwd) * dronePosDelta;
+        dz = (demo.input.fwd - demo.input.bwd) * dronePosDelta * droneDir[1]; 
+
+        dyaw =
+            (demo.input.rwd - demo.input.lwd)
+            * (demo.input.bwd ? -1 : 1)
+            * droneYawDelta;
+
+        drone.move(dx, dy, dz, dyaw);
+
+        camera.setPosition(
+            drone.getX() - droneDir[0] * cameraDist,
+            drone.getY() + cameraElev,
+            drone.getZ() - droneDir[1] * cameraDist
+        );
     }
 
     function loop(currTime) {

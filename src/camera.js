@@ -44,6 +44,12 @@ demo.camera = (function () {
             position[2] = newZ;
         };
 
+        this.setPosition = function(newX, newY, newZ) {
+            position[0] = newX;
+            position[1] = newY;
+            position[2] = newZ;
+        };
+
         this.setElevation = function(newElev) {
             elev = newElev;
         };

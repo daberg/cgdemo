@@ -198,7 +198,7 @@ demo.drone = (function() {
             this.loadModel();
             this.loadShaders();
             this.initBuffers();
-            this.move(0, 0, 0, 0);
+            this.moveTo(0, 0, 0, 0);
         };
 
         this.draw = function(context) {
@@ -290,6 +290,14 @@ demo.drone = (function() {
             }
         };
 
+        this.moveTo = function(newX, newY, newZ, newYaw) {
+            cx = newX;
+            cy = newY;
+            cz = newZ;
+            yaw = newYaw % 360.0;
+            wMatrix = utils.makeWorld(cx, cy, cz, 0, yaw, 0, 0.5);
+        };
+
         this.move = function(dx, dy, dz, dyaw) {
             cx = cx + dx;
             cy = cy + dy;
@@ -300,6 +308,22 @@ demo.drone = (function() {
 
         this.rotatePropellers = function() {
             propYaw = (propYaw + propDelta) % 360.0;
+        };
+
+        this.getYaw = function() {
+            return yaw;
+        };
+
+        this.getX = function() {
+            return cx;
+        };
+
+        this.getY = function() {
+            return cy;
+        };
+
+        this.getZ = function() {
+            return cz;
         };
     };
 
