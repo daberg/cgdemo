@@ -295,15 +295,16 @@ demo.drone = (function() {
             cy = newY;
             cz = newZ;
             yaw = newYaw % 360.0;
-            wMatrix = utils.makeWorld(cx, cy, cz, 0, yaw, 0, 0.5);
+            wMatrix = utils.makeWorld(cx, cy, cz, 0, yaw, 0, 0.25);
         };
 
         this.move = function(dx, dy, dz, dyaw) {
-            cx = cx + dx;
-            cy = cy + dy;
-            cz = cz + dz;
-            yaw = (yaw + dyaw) % 360.0;
-            wMatrix = utils.makeWorld(cx, cy, cz, 0, yaw, 0, 0.5);
+            this.moveTo(
+                cx + dx,
+                cy + dy,
+                cz + dz,
+                yaw + dyaw
+            );
         };
 
         this.rotatePropellers = function() {

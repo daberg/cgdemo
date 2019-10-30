@@ -9,8 +9,8 @@ demo.main = function() {
     var timeDelta = 0;
 
     var camera = new demo.camera.Camera(0, 100, -300, -25, 180);
-    var cameraDist = 250;
-    var cameraElev = 100;
+    var cameraDist = 150;
+    var cameraElev = 75;
 
     var nearDist = 1;
     var farDist = 10000;
@@ -26,14 +26,14 @@ demo.main = function() {
     var terrain;
     var tileSize = [1000, 1000];
 
-    var lightAlpha = - utils.degToRad(90);  // Elev
+    var lightAlpha = - utils.degToRad(75);  // Elev
     var lightBeta  = - utils.degToRad(270); // Angle
     var lightDir = [
         Math.cos(lightAlpha) * Math.cos(lightBeta),
         Math.sin(lightAlpha),
         Math.cos(lightAlpha) * Math.sin(lightBeta)
     ];
-    var lightColor = [0.9, 0.9, 0.9];
+    var lightColor = [0.7, 0.7, 0.7];
 
     var drawContext = new (function() {
         this.cameraPos = null;
