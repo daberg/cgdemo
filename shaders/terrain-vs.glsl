@@ -1,5 +1,7 @@
 #version 300 es
 
+precision highp float;
+
 //
 // Author: Stefan Gustavson (stefan.gustavson@gmail.com)
 // Version 2016-05-10.
@@ -424,14 +426,15 @@ uniform mat4 n_w_matrix;
 
 out vec3 v_world_pos;
 out vec3 v_world_normal;
-out vec3 v_color;
+
+out vec2 v_uv;
 
 void main() {
-    // Displacement in the tile
+    // Displacement from the center of the tile
     // Same as model space coordinates since model is centered in the origin
     vec2 v_offset = v_model_pos.xz;
 
-    // Calculate noise input
+    // Calculate noise input (displacement in the tile world)
     vec2 noise_t = tile_seed * tile_size + v_offset;
 
     float ampl = 2.0 * 100.0;
@@ -455,29 +458,16 @@ void main() {
     // Calculate new model position
     float height = noise.x - max_height;
     vec3 new_model_pos = vec3(v_model_pos.x, height, v_model_pos.z);
-
     // Transform it into world coordinates
     v_world_pos = (v_w_matrix * vec4(new_model_pos, 1.0)).xyz;
-
     // Transform it into projection coordinates
     gl_Position = v_wvp_matrix * vec4(new_model_pos, 1.0);
 
     // Calculate normal from analytical derivatives
     vec3 normal = normalize(vec3(-noise.y, 1.0, -noise.z));
-
     // Transform it into world coordinates
     v_world_normal = mat3(n_w_matrix) * normal;
 
-    // Calculate ambient color relatively to position
-    vec2 maxval = tile_size / 2.0;
-    vec2 minval = - maxval;
-
-    vec2 xz_rel = (v_model_pos.xz - minval) / (maxval - minval);
-    float y_rel = (height + max_height) / max_height;
-
-    v_color = vec3(
-        0.50 + xz_rel.x / 1.5,
-        0.50 +    y_rel / 1.5,
-        0.50 + xz_rel.y / 1.5
-    );
+    // Calculate uv mapping
+    v_uv = noise_t / 80.0;
 }

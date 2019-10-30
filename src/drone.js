@@ -76,6 +76,13 @@ demo.drone = (function() {
             );
         };
 
+        this.loadShaders = function() {
+            program = program || utils.loadShaders(
+                demo.graphics.getOpenGL(),
+                shaderPaths
+            );
+        };
+
         this.initBuffers = function() {
             var gl = demo.graphics.getOpenGL();
 
@@ -185,13 +192,6 @@ demo.drone = (function() {
             lightColorLocation = gl.getUniformLocation(program, 'light_color');
 
             obsPosLocation = gl.getUniformLocation(program, 'obs_w_pos');
-        };
-
-        this.loadShaders = function() {
-            program = program || utils.loadShaders(
-                demo.graphics.getOpenGL(),
-                shaderPaths
-            );
         };
 
         this.init = function() {

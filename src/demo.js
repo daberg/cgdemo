@@ -3,7 +3,7 @@ var demo = demo || {};
 demo.main = function() {
     var canvas = document.getElementById('demo-canvas');
 
-    var seed = [1, 1].map(val => utils.randomInteger(-16384, 16384));
+    var seed = [1, 1].map(val => utils.randomInteger(-1000, 1000));
 
     var lastTime = 0;
     var timeDelta = 0;
@@ -26,14 +26,14 @@ demo.main = function() {
     var terrain;
     var tileSize = [1000, 1000];
 
-    var lightAlpha = - utils.degToRad(75);  // Elev
+    var lightAlpha = - utils.degToRad(90);  // Elev
     var lightBeta  = - utils.degToRad(270); // Angle
     var lightDir = [
         Math.cos(lightAlpha) * Math.cos(lightBeta),
         Math.sin(lightAlpha),
         Math.cos(lightAlpha) * Math.sin(lightBeta)
     ];
-    var lightColor = [0.7, 0.7, 0.7];
+    var lightColor = [0.9, 0.9, 0.9];
 
     var drawContext = new (function() {
         this.cameraPos = null;
@@ -54,7 +54,7 @@ demo.main = function() {
         drone = new demo.drone.Drone();
         drone.init();
 
-        terrain = demo.terrain.generateTile(tileSize, 2, seed);
+        terrain = demo.terrain.generateTile(tileSize, 1.0, seed);
         terrain.init();
         terrain.setWorldMatrix(utils.makeWorld(0, 0, 30, 0, 0, 0, 1));
     }
@@ -100,7 +100,7 @@ demo.main = function() {
 
         dx = (demo.input.fwd - demo.input.bwd) * dronePosDelta * droneDir[0];
         dy = (demo.input.uwd - demo.input.dwd) * dronePosDelta;
-        dz = (demo.input.fwd - demo.input.bwd) * dronePosDelta * droneDir[1]; 
+        dz = (demo.input.fwd - demo.input.bwd) * dronePosDelta * droneDir[1];
 
         dyaw =
             (demo.input.rwd - demo.input.lwd)

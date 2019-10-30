@@ -10,7 +10,8 @@ demo.config.maxFps         = 60;
 demo.config.tickTime   = 1000.0 / demo.config.ticksPerSecond;
 demo.config.updateTime = 1000.0 / demo.config.maxFps;
 
-demo.config.modelDirPath  = document.URL + "models/";
-demo.config.shaderDirPath = document.URL + "shaders/";
+demo.config.modelDirPath   = document.URL + "models/";
+demo.config.shaderDirPath  = document.URL + "shaders/";
+demo.config.textureDirPath = document.URL + "textures/";
 
 demo.config.debugging = true;

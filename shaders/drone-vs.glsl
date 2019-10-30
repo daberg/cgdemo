@@ -1,5 +1,7 @@
 #version 300 es
 
+precision highp float;
+
 in vec3 v_model_pos;
 in vec3 v_model_normal;
 

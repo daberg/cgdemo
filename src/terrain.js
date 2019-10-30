@@ -6,54 +6,83 @@ demo.terrain = (function (){
         "terrain-fs.glsl"
     ].map(name => demo.config.shaderDirPath + name);
 
+    var texturePath = demo.config.textureDirPath + "/mountain.png";
+
     var program;
+    var texture;
 
     var pub = {};
 
     pub.Tile = function (vertices, indices, size, seed) {
-        var vertices = vertices;
-        var indices = indices;
         var size = new Float32Array(size);
         var seed = new Float32Array(seed);
 
-        var worldMatrix;
-        var nWorldMatrix;
+        var vertices = vertices;
+        var indices = indices;
+
+        var wMatrix;
+        var nwMatrix;
 
         var vao;
+
         var sizeLocation;
         var seedLocation;
+
         var wMatrixLocation;
         var wvpMatrixLocation;
         var nwMatrixLocation;
+
         var lightDirLocation;
         var lightColorLocation;
+
         var obsPosLocation;
 
-        this.setIndices = function(newIndices) {
-            indices = newIndices;
-        }
+        this.loadModel = function() {
+            var gl = demo.graphics.getOpenGL();
 
-        this.setVertices = function(newVertices) {
-            vertices = newVertices;
-        }
+            texture = gl.createTexture();
+            gl.bindTexture(gl.TEXTURE_2D, texture);
 
-        this.getWorldMatrix = function() {
-            return worldMatrix;
-        }
+            // Load temporary texture while waiting
+            gl.texImage2D(
+                gl.TEXTURE_2D,
+                0,
+                gl.RGBA,
+                1,
+                1,
+                0,
+                gl.RGBA,
+                gl.UNSIGNED_BYTE,
+                new Uint8Array([0, 0, 255, 255])
+            );
 
-        this.setWorldMatrix = function(newWorldMatrix) {
-            worldMatrix = newWorldMatrix;
-            nWorldMatrix = utils.invertMatrix(utils.transposeMatrix(
-                worldMatrix
-            ));
-        }
+            // Apply actual texture when it is ready
+            var image = new Image();
+            image.src = texturePath;
+            if ((new URL(texturePath)).origin !== window.location.origin) {
+                image.crossOrigin = "";
+            }
+            image.onload = function() {
+                gl.bindTexture(gl.TEXTURE_2D, texture);
+                gl.texImage2D(
+                    gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image
+                );
+                gl.texParameteri(
+                    gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR
+                );
+                gl.texParameteri(
+                    gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR
+                );
+                gl.generateMipmap(gl.TEXTURE_2D);
+            };
+        };
 
         this.loadShaders = function() {
             program = program || utils.loadShaders(
                 demo.graphics.getOpenGL(),
                 shaderPaths
             );
-        }
+        };
 
         this.initBuffers = function () {
             var gl = demo.graphics.getOpenGL();
@@ -99,17 +128,18 @@ demo.terrain = (function (){
             lightColorLocation = gl.getUniformLocation(program, 'light_color');
 
             obsPosLocation = gl.getUniformLocation(program, 'obs_w_pos');
-        }
+        };
 
         this.init = function() {
+            this.loadModel();
             this.loadShaders();
             this.initBuffers();
-        }
+        };
 
         this.draw = function(context) {
             var gl = demo.graphics.getOpenGL();
 
-            var wvMatrix = utils.multiplyMatrices(context.vMatrix, worldMatrix);
+            var wvMatrix = utils.multiplyMatrices(context.vMatrix, wMatrix);
             var wvpMatrix = utils.multiplyMatrices(context.pMatrix, wvMatrix);
 
             gl.useProgram(program);
@@ -117,7 +147,7 @@ demo.terrain = (function (){
             gl.uniformMatrix4fv(
                 wMatrixLocation,
                 gl.FALSE,
-                utils.transposeMatrix(worldMatrix)
+                utils.transposeMatrix(wMatrix)
             );
 
             gl.uniformMatrix4fv(
@@ -129,7 +159,7 @@ demo.terrain = (function (){
             gl.uniformMatrix4fv(
                 nwMatrixLocation,
                 gl.FALSE,
-                utils.transposeMatrix(nWorldMatrix)
+                utils.transposeMatrix(nwMatrix)
             );
 
             gl.uniform2fv(sizeLocation, size);
@@ -140,9 +170,17 @@ demo.terrain = (function (){
 
             gl.uniform3fv(obsPosLocation, context.cameraPos);
 
+            gl.bindTexture(gl.TEXTURE_2D, texture);
             gl.bindVertexArray(vao);
             gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_INT, 0);
-        }
+        };
+
+        this.setWorldMatrix = function(newWorldMatrix) {
+            wMatrix = newWorldMatrix;
+            nwMatrix = utils.invertMatrix(utils.transposeMatrix(
+                wMatrix
+            ));
+        };
     }
 
     /**
@@ -165,7 +203,7 @@ demo.terrain = (function (){
         var zLen = size[1];
 
         // Number of vertices per row and column respectively
-        // Steps are the intervals between vertices, so we subtract one
+        // Steps are the intervals between vertices, so we add one
         var rowLen = size[0] / step + 1;
         var colLen = size[1] / step + 1;
 

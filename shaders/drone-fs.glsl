@@ -1,6 +1,6 @@
 #version 300 es
 
-precision mediump float;
+precision highp float;
 
 vec3 lambert(
     vec3 light_dir,
@@ -35,7 +35,7 @@ uniform vec3 light_color;
 
 uniform vec3 obs_w_pos;
 
-out vec4 out_color;
+out vec4 f_color;
 
 void main() {
     vec3 to_light = - normalize(light_dir);
@@ -58,5 +58,5 @@ void main() {
         shininess
     );
 
-    out_color = vec4(clamp(diffuse + specular, 0.0, 1.0), 1.0);
+    f_color = vec4(clamp(diffuse + specular, 0.0, 1.0), 1.0);
 }

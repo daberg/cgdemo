@@ -56,6 +56,7 @@ var utils = {
             return shader;
         }
         else {
+            console.log(gl.getShaderInfoLog(shader));
             throw new Error("Could not compile shader");
         }
     },
@@ -70,9 +71,9 @@ var utils = {
             return program;
         }
         else {
-            throw new Error("Could not link program");
+            console.log(gl.getProgramInfoLog(program));
             gl.deleteProgram(program);
-            return undefined;
+            throw new Error("Could not link program");
         }
     },
 
