@@ -10,7 +10,7 @@ demo.main = function() {
 
     var camera = new demo.camera.Camera(0, 100, -300, -25, 180);
     var cameraDist = 150;
-    var cameraElev = 75;
+    var cameraElev = 35;
 
     var nearDist = 1;
     var farDist = 10000;
@@ -18,12 +18,14 @@ demo.main = function() {
 
     var drone;
 
-    var droneVel = 100;
+    var droneVel = 75;
     var dronePosDelta = droneVel / demo.config.ticksPerSecond;
     var droneAngVel = 30;
     var droneYawDelta = droneAngVel / demo.config.ticksPerSecond;
 
-    var terrain;
+    var tileRowLen = 3;
+    var tileColLen = 3;
+    var tiles = new Array(tileRowLen * tileColLen);
     var tileSize = [1000, 1000];
 
     var lightAlpha = - utils.degToRad(75);  // Elev
@@ -54,9 +56,21 @@ demo.main = function() {
         drone = new demo.drone.Drone();
         drone.init();
 
-        terrain = demo.terrain.generateTile(tileSize, 1.0, seed);
-        terrain.init();
-        terrain.setWorldMatrix(utils.makeWorld(0, 0, 30, 0, 0, 0, 1));
+        for (var row = 0; row < tileColLen; row++) {
+            for (var col = 0; col < tileRowLen; col++) {
+                var tileN = tileRowLen * row + col;
+                tiles[tileN] = demo.terrain.generateTile(
+                    tileSize,
+                    5.0,
+                    [seed[0] + col, seed[1] + row]
+                );
+                tiles[tileN].init();
+                tiles[tileN].moveTo(
+                    tileSize[0] * col - tileSize[0] * (tileRowLen- 1) / 2,
+                    tileSize[1] * row - tileSize[1] * (tileColLen - 1) / 2
+                );
+            }
+        }
     }
 
     function draw() {
@@ -87,7 +101,10 @@ demo.main = function() {
         drawContext.cameraPos = camera.getPosition();
 
         drone.draw(drawContext);
-        terrain.draw(drawContext);
+
+        for (tile of tiles) {
+            tile.draw(drawContext);
+        }
     }
 
     function tick() {

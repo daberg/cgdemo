@@ -17,6 +17,10 @@ demo.terrain = (function (){
         var size = new Float32Array(size);
         var seed = new Float32Array(seed);
 
+        var cx = 0;
+        var cy = 0;
+        var cz = 0;
+
         var vertices = vertices;
         var indices = indices;
 
@@ -134,13 +138,20 @@ demo.terrain = (function (){
             this.loadModel();
             this.loadShaders();
             this.initBuffers();
+            this.moveTo(0, 0);
         };
 
         this.draw = function(context) {
             var gl = demo.graphics.getOpenGL();
 
-            var wvMatrix = utils.multiplyMatrices(context.vMatrix, wMatrix);
-            var wvpMatrix = utils.multiplyMatrices(context.pMatrix, wvMatrix);
+            var wvpMatrix = utils.multiplyMatrices(
+                context.pMatrix,
+                utils.multiplyMatrices(
+                    context.vMatrix,
+                    wMatrix
+                )
+            );
+            var nwMatrix = utils.makeNormalWorld(wMatrix);
 
             gl.useProgram(program);
 
@@ -175,11 +186,10 @@ demo.terrain = (function (){
             gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_INT, 0);
         };
 
-        this.setWorldMatrix = function(newWorldMatrix) {
-            wMatrix = newWorldMatrix;
-            nwMatrix = utils.invertMatrix(utils.transposeMatrix(
-                wMatrix
-            ));
+        this.moveTo = function(newX, newZ) {
+            cx = newX;
+            cz = newZ;
+            wMatrix = utils.makeWorld(cx, 0, cz, 0, 0, 0, 1);
         };
     }
 
