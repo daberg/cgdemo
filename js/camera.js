@@ -4,9 +4,9 @@ demo.camera = (function () {
     var pub = {};
 
     pub.Camera = function(x, y, z, elev, angle) {
-        var position = [x, y, z];
-        var elev = elev;
-        var angle = angle;
+        var position = [x || 0, y || 0, z || 0];
+        var elev = elev || 0;
+        var angle = angle || 0;
 
         this.getX = function() {
             return position[0];

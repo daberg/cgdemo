@@ -8,7 +8,7 @@ demo.main = function() {
     var lastTime = 0;
     var timeDelta = 0;
 
-    var camera = new demo.camera.Camera(0, 100, -300, -25, 180);
+    var camera = new demo.camera.Camera();
     var cameraDist = 150;
     var cameraElev = 35;
 
@@ -18,7 +18,7 @@ demo.main = function() {
 
     var drone;
 
-    var droneVel = 75;
+    var droneVel = 150;
     var dronePosDelta = droneVel / demo.config.ticksPerSecond;
     var droneAngVel = 30;
     var droneYawDelta = droneAngVel / demo.config.ticksPerSecond;
@@ -55,13 +55,14 @@ demo.main = function() {
 
         drone = new demo.drone.Drone();
         drone.init();
+        drone.moveTo(-1000, 250, -1000, -45);
 
         for (var row = 0; row < tileColLen; row++) {
             for (var col = 0; col < tileRowLen; col++) {
                 var tileN = tileRowLen * row + col;
                 tiles[tileN] = demo.terrain.generateTile(
                     tileSize,
-                    5.0,
+                    2.0,
                     [seed[0] + col, seed[1] + row]
                 );
                 tiles[tileN].init();

@@ -294,7 +294,7 @@ demo.drone = (function() {
             cx = newX;
             cy = newY;
             cz = newZ;
-            yaw = newYaw % 360.0;
+            yaw = (newYaw || 0) % 360.0;
             wMatrix = utils.makeWorld(cx, cy, cz, 0, yaw, 0, 0.25);
         };
 
@@ -303,7 +303,7 @@ demo.drone = (function() {
                 cx + dx,
                 cy + dy,
                 cz + dz,
-                yaw + dyaw
+                yaw + (dyaw || 0)
             );
         };
 

@@ -415,6 +415,11 @@ float snoise(vec2 pos) {
   return srnoise(pos, 0.0);
 }
 
+// Noise function returning a value between 0 and 1
+vec3 nnoisef(vec2 t) {
+    return (sdnoise(t) + vec3(1.0, 0.0, 0.0)) / 2.0;
+}
+
 in vec3 v_model_pos;
 
 uniform vec2 tile_size;
@@ -437,23 +442,27 @@ void main() {
     // Calculate noise input (displacement in the tile world)
     vec2 noise_t = tile_seed * tile_size + v_offset;
 
-    float ampl = 2.0 * 100.0;
-    float freq = 0.5 / 250.0;
-    float scaling = 2.0;
+    float freq = 0.5 / 750.0;
+    float freq_scaling = 2.0;
+
+    float ampl = 2.0 * 300.0;
+    float ampl_scaling = 2.0;
 
     vec3 noise = vec3(0.0, 0.0, 0.0);
     float max_height = 0.0;
 
-    for(int i = 0; i < 5; i++) {
-        freq *= scaling;
-        ampl /= scaling;
+    for(int i = 0; i < 4; i++) {
+        freq *= freq_scaling;
+        ampl /= ampl_scaling;
 
-        noise += sdnoise(freq * noise_t)
+        noise += nnoisef(freq * noise_t)
                  * ampl                   // scale everything by amplitude
                  * vec3(1.0, freq, freq); // scale derivatives by frequency
 
         max_height += ampl;
     }
+
+    // noise.x = pow(noise.x, 2.0);
 
     // Calculate new model position
     float height = noise.x - max_height;

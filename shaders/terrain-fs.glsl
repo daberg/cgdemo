@@ -71,4 +71,6 @@ void main() {
     );
 
     f_color = vec4(clamp(ambient + diffuse + specular, 0.0, 1.0), 1.0);
+
+    //f_color = vec4((normal + 1.0) / 2.0, 1.0);
 }
