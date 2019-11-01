@@ -192,6 +192,8 @@ demo.drone = (function() {
             lightColorLocation = gl.getUniformLocation(program, 'light_color');
 
             obsPosLocation = gl.getUniformLocation(program, 'obs_w_pos');
+
+            gl.bindVertexArray(null);
         };
 
         this.init = function() {

@@ -48,36 +48,43 @@ var utils = {
 
     createShader: function(gl, type, source) {
         var shader = gl.createShader(type);
+
         gl.shaderSource(shader, source);
         gl.compileShader(shader);
 
         var success = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
-        if (success) {
-            return shader;
+        if (!success) {
+            var error_message = gl.getShaderInfoLog(shader);
+            throw "Could not compile shader.\n" + error_message;
         }
-        else {
-            console.log(gl.getShaderInfoLog(shader));
-            throw new Error("Could not compile shader");
-        }
+
+        return shader;
     },
 
-    createProgram: function(gl, vertexShader, fragmentShader) {
+    createProgram: function(gl, vShader, fShader, varyings) {
         var program = gl.createProgram();
-        gl.attachShader(program, vertexShader);
-        gl.attachShader(program, fragmentShader);
+
+        gl.attachShader(program, vShader);
+        gl.attachShader(program, fShader);
+
+        if (varyings) {
+            gl.transformFeedbackVaryings(
+                program, varyings, gl.SEPARATE_ATTRIBS
+            );
+        }
+
         gl.linkProgram(program);
+
         var success = gl.getProgramParameter(program, gl.LINK_STATUS);
-        if (success) {
-            return program;
+        if (!success) {
+            var error_message = gl.getProgramInfoLog(program);
+            throw "Could not link program.\n" + error_message;
         }
-        else {
-            console.log(gl.getProgramInfoLog(program));
-            gl.deleteProgram(program);
-            throw new Error("Could not link program");
-        }
+
+        return program;
     },
 
-    loadShaders: function(gl, shaderPaths) {
+    loadShaders: function(gl, shaderPaths, varyings) {
         var vShaderCode, fShaderCode;
         var success;
 
@@ -99,18 +106,18 @@ var utils = {
             throw new Error("Could not load shaders");
         }
 
-        var vertexShader = utils.createShader(
+        var vShader = utils.createShader(
             gl,
             gl.VERTEX_SHADER,
             vShaderCode
         );
-        var fragmentShader = utils.createShader(
+        var fShader = utils.createShader(
             gl,
             gl.FRAGMENT_SHADER,
             fShaderCode
         );
 
-        return utils.createProgram(gl, vertexShader, fragmentShader);
+        return utils.createProgram(gl, vShader, fShader, varyings);
     },
 
     resizeCanvasToDisplaySize: function(canvas, multiplier) {

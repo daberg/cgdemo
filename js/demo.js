@@ -26,7 +26,7 @@ demo.main = function() {
     var tileRowLen = 3;
     var tileColLen = 3;
     var tiles = new Array(tileRowLen * tileColLen);
-    var tileSize = [1000, 1000];
+    var tileSize = [500, 500];
 
     var lightAlpha = - utils.degToRad(75);  // Elev
     var lightBeta  = - utils.degToRad(270); // Angle
@@ -53,16 +53,12 @@ demo.main = function() {
 
         demo.graphics.init(canvas);
 
-        drone = new demo.drone.Drone();
-        drone.init();
-        drone.moveTo(-1000, 250, -1000, -45);
-
         for (var row = 0; row < tileColLen; row++) {
             for (var col = 0; col < tileRowLen; col++) {
                 var tileN = tileRowLen * row + col;
                 tiles[tileN] = demo.terrain.generateTile(
                     tileSize,
-                    2.0,
+                    5.0,
                     [seed[0] + col, seed[1] + row]
                 );
                 tiles[tileN].init();
@@ -72,6 +68,10 @@ demo.main = function() {
                 );
             }
         }
+
+        drone = new demo.drone.Drone();
+        drone.init();
+        drone.moveTo(-1000, 250, -1000, -45);
     }
 
     function draw() {

@@ -5,10 +5,16 @@ demo.terrain = (function (){
         "terrain-vs.glsl",
         "terrain-fs.glsl"
     ].map(name => demo.config.shaderDirPath + name);
+    var noiseShaderPaths = [
+        "terrain-nvs.glsl",
+        "terrain-nfs.glsl"
+    ].map(name => demo.config.shaderDirPath + name);
 
     var texturePath = demo.config.textureDirPath + "/mountain.png";
 
+    var noiseProgram;
     var program;
+
     var texture;
 
     var pub = {};
@@ -16,6 +22,8 @@ demo.terrain = (function (){
     pub.Tile = function (vertices, indices, size, seed) {
         var size = new Float32Array(size);
         var seed = new Float32Array(seed);
+        console.log(size);
+        console.log(seed);
 
         var cx = 0;
         var cy = 0;
@@ -82,18 +90,37 @@ demo.terrain = (function (){
         };
 
         this.loadShaders = function() {
+            noiseProgram = noiseProgram || utils.loadShaders(
+                demo.graphics.getOpenGL(),
+                noiseShaderPaths,
+                ["v_out_pos", "v_normal"]
+            );
             program = program || utils.loadShaders(
                 demo.graphics.getOpenGL(),
                 shaderPaths
             );
         };
 
-        this.initBuffers = function () {
+        this.initBuffers = function() {
             var gl = demo.graphics.getOpenGL();
 
-            // Use new VAO
-            vao = gl.createVertexArray();
-            gl.bindVertexArray(vao);
+            var newPosBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, newPosBuffer);
+            gl.bufferData(
+                gl.ARRAY_BUFFER,
+                new Float32Array(vertices.length),
+                gl.STATIC_DRAW
+            );
+
+            var normalBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
+            gl.bufferData(
+                gl.ARRAY_BUFFER,
+                new Float32Array(vertices.length),
+                gl.STATIC_DRAW
+            );
+
+            gl.useProgram(noiseProgram);
 
             // Initialize position buffer
             var positionBuffer = gl.createBuffer();
@@ -105,11 +132,72 @@ demo.terrain = (function (){
             );
             // Initialize position attribute
             var posAttribLocation = gl.getAttribLocation(
+                noiseProgram, "v_in_pos"
+            );
+            gl.enableVertexAttribArray(posAttribLocation);
+            gl.vertexAttribPointer(
+                posAttribLocation, 3, gl.FLOAT, false, 0, 0
+            );
+
+            sizeLocation = gl.getUniformLocation(noiseProgram, "tile_size");
+            gl.uniform2fv(sizeLocation, size);
+
+            seedLocation = gl.getUniformLocation(noiseProgram, "tile_seed");
+            gl.uniform2fv(seedLocation, seed);
+
+            gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, newPosBuffer);
+            gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 1, normalBuffer);
+
+            gl.enable(gl.RASTERIZER_DISCARD);
+
+            gl.beginTransformFeedback(gl.POINTS);
+            gl.drawArrays(gl.POINTS, 0, vertices.length / 3);
+            gl.endTransformFeedback(gl.POINTS);
+
+            gl.disable(gl.RASTERIZER_DISCARD);
+
+            gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, null);
+            gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 1, null);
+            
+            //console.log(vertices);
+            //// Sync before accessing buffers
+            //var fence = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
+            //gl.waitSync(fence, 0, gl.TIMEOUT_IGNORED);
+            //// Log new position buffer
+            //var tmp1 = new Float32Array(vertices.length).fill(350);
+            //gl.bindBuffer(gl.ARRAY_BUFFER, newPosBuffer);
+            //gl.getBufferSubData(gl.ARRAY_BUFFER, 0, tmp1);
+            //console.log(tmp1);
+            //// Log normal buffer
+            //var tmp2 = new Float32Array(vertices.length).fill(400);
+            //gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
+            //gl.getBufferSubData(gl.ARRAY_BUFFER, 0, tmp2);
+            //console.log(tmp2);
+
+            // Use new VAO
+            vao = gl.createVertexArray();
+            gl.bindVertexArray(vao);
+
+            // Bind position buffer
+            gl.bindBuffer(gl.ARRAY_BUFFER, newPosBuffer);
+            // Initialize position attribute
+            var posAttribLocation = gl.getAttribLocation(
                 program, "v_model_pos"
             );
             gl.enableVertexAttribArray(posAttribLocation);
             gl.vertexAttribPointer(
                 posAttribLocation, 3, gl.FLOAT, false, 0, 0
+            );
+
+            // Bind normal buffer
+            gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
+            // Initialize normal attribute
+            var normalAttributeLocation = gl.getAttribLocation(
+                program, "v_model_normal"
+            );
+            gl.enableVertexAttribArray(normalAttributeLocation);
+            gl.vertexAttribPointer(
+                normalAttributeLocation, 3, gl.FLOAT, false, 0, 0
             );
 
             // Initialize index buffer
@@ -121,9 +209,6 @@ demo.terrain = (function (){
                 gl.STATIC_DRAW
             );
 
-            sizeLocation = gl.getUniformLocation(program, "tile_size");
-            seedLocation = gl.getUniformLocation(program, "tile_seed");
-
             wMatrixLocation = gl.getUniformLocation(program, "v_w_matrix");
             wvpMatrixLocation = gl.getUniformLocation(program, "v_wvp_matrix");
             nwMatrixLocation = gl.getUniformLocation(program, "n_w_matrix");
@@ -132,11 +217,13 @@ demo.terrain = (function (){
             lightColorLocation = gl.getUniformLocation(program, 'light_color');
 
             obsPosLocation = gl.getUniformLocation(program, 'obs_w_pos');
+
+            gl.bindVertexArray(null);
         };
 
         this.init = function() {
-            this.loadModel();
             this.loadShaders();
+            this.loadModel();
             this.initBuffers();
             this.moveTo(0, 0);
         };
@@ -172,9 +259,6 @@ demo.terrain = (function (){
                 gl.FALSE,
                 utils.transposeMatrix(nwMatrix)
             );
-
-            gl.uniform2fv(sizeLocation, size);
-            gl.uniform2fv(seedLocation, seed);
 
             gl.uniform3fv(lightDirLocation, context.lightDir);
             gl.uniform3fv(lightColorLocation, context.lightColor);
