@@ -30,6 +30,9 @@ demo.drone = (function() {
         var propNormals;
         var propTfs = new Array(4);
 
+        var numBodyIndices;
+        var numPropIndices;
+
         var wMatrix;
 
         var diffColor;
@@ -52,6 +55,8 @@ demo.drone = (function() {
 
         var obsPosLocation;
 
+        var gpuBuffers = [];
+
         this.loadModel = function() {
             utils.get_json(
                 demo.config.modelDirPath + 'drone.json',
@@ -63,6 +68,9 @@ demo.drone = (function() {
                     propVertices = model.meshes[0].vertices;
                     propIndices = [].concat.apply([], model.meshes[0].faces);
                     propNormals = model.meshes[0].normals;
+
+                    numBodyIndices = bodyIndices.length;
+                    numPropIndices = propIndices.length;
 
                     propTfs[0] = model.rootnode.children[0].transformation;
                     propTfs[1] = model.rootnode.children[1].transformation;
@@ -92,6 +100,7 @@ demo.drone = (function() {
 
             // Initialize position buffer
             var positionBuffer = gl.createBuffer();
+            gpuBuffers.push(positionBuffer);
             gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
             gl.bufferData(
                 gl.ARRAY_BUFFER,
@@ -109,6 +118,7 @@ demo.drone = (function() {
 
             // Initialize normal buffer
             var normalBuffer = gl.createBuffer();
+            gpuBuffers.push(normalBuffer);
             gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
             gl.bufferData(
                 gl.ARRAY_BUFFER,
@@ -126,6 +136,7 @@ demo.drone = (function() {
 
             // Initialize index buffer
             var indexBuffer = gl.createBuffer();
+            gpuBuffers.push(indexBuffer);
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
             gl.bufferData(
                 gl.ELEMENT_ARRAY_BUFFER,
@@ -133,12 +144,15 @@ demo.drone = (function() {
                 gl.STATIC_DRAW
             );
 
+            gl.bindVertexArray(null);
+
             // Propeller VAO
             propVao = gl.createVertexArray();
             gl.bindVertexArray(propVao);
 
             // Initialize position buffer
             var positionBuffer = gl.createBuffer();
+            gpuBuffers.push(positionBuffer);
             gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
             gl.bufferData(
                 gl.ARRAY_BUFFER,
@@ -156,6 +170,7 @@ demo.drone = (function() {
 
             // Initialize normal buffer
             var normalBuffer = gl.createBuffer();
+            gpuBuffers.push(normalBuffer);
             gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
             gl.bufferData(
                 gl.ARRAY_BUFFER,
@@ -173,6 +188,7 @@ demo.drone = (function() {
 
             // Initialize index buffer
             var indexBuffer = gl.createBuffer();
+            gpuBuffers.push(indexBuffer);
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
             gl.bufferData(
                 gl.ELEMENT_ARRAY_BUFFER,
@@ -200,6 +216,15 @@ demo.drone = (function() {
             this.loadModel();
             this.loadShaders();
             this.initBuffers();
+
+            // Free data from CPU memory
+            vertices = null;
+            indices = null;
+            normals = null;
+            propVertices = null;
+            propIndices = null;
+            propNormals = null;
+
             this.moveTo(0, 0, 0, 0);
         };
 
@@ -246,7 +271,7 @@ demo.drone = (function() {
 
             gl.bindVertexArray(bodyVao);
             gl.drawElements(
-                gl.TRIANGLES, bodyIndices.length, gl.UNSIGNED_SHORT, 0
+                gl.TRIANGLES, numBodyIndices, gl.UNSIGNED_SHORT, 0
             );
 
             gl.bindVertexArray(propVao);
@@ -287,7 +312,7 @@ demo.drone = (function() {
                 );
 
                 gl.drawElements(
-                    gl.TRIANGLES, propIndices.length, gl.UNSIGNED_SHORT, 0
+                    gl.TRIANGLES, numPropIndices, gl.UNSIGNED_SHORT, 0
                 );
             }
         };
@@ -327,6 +352,14 @@ demo.drone = (function() {
 
         this.getZ = function() {
             return cz;
+        };
+
+        this.free = function() {
+            gl = demo.graphics.getOpenGL();
+            for (buffer of gpuBuffers) {
+                if (buffer)
+                    gl.deleteBuffer(buffer);
+            }
         };
     };
 

@@ -23,10 +23,10 @@ demo.main = function() {
     var droneAngVel = 30;
     var droneYawDelta = droneAngVel / demo.config.ticksPerSecond;
 
-    var tileRowLen = 3;
-    var tileColLen = 3;
+    var tileRowLen = 5;
+    var tileColLen = 5;
     var tiles = new Array(tileRowLen * tileColLen);
-    var tileSize = [500, 500];
+    var tileSize = [1500, 1500];
 
     var lightAlpha = - utils.degToRad(75);  // Elev
     var lightBeta  = - utils.degToRad(270); // Angle
@@ -36,6 +36,8 @@ demo.main = function() {
         Math.cos(lightAlpha) * Math.sin(lightBeta)
     ];
     var lightColor = [0.7, 0.7, 0.7];
+
+    var running = true;
 
     var drawContext = new (function() {
         this.cameraPos = null;
@@ -52,6 +54,14 @@ demo.main = function() {
         demo.log.logMessage("Demo seed: " + seed);
 
         demo.graphics.init(canvas);
+
+        window.addEventListener(
+            "beforeunload",
+            function(e) {
+                quit();
+            },
+            false
+        );
 
         for (var row = 0; row < tileColLen; row++) {
             for (var col = 0; col < tileRowLen; col++) {
@@ -71,7 +81,7 @@ demo.main = function() {
 
         drone = new demo.drone.Drone();
         drone.init();
-        drone.moveTo(-1000, 250, -1000, -45);
+        drone.moveTo(0, 0, 0, 0);
     }
 
     function draw() {
@@ -135,6 +145,10 @@ demo.main = function() {
     }
 
     function loop(currTime) {
+        if (!running) {
+            return;
+        }
+
         if (currTime < lastTime + demo.config.updateTime) {
             requestAnimationFrame(loop);
             return;
@@ -156,6 +170,31 @@ demo.main = function() {
     function start() {
         demo.log.logMessage('Starting demo');
         window.requestAnimationFrame(loop);
+    }
+
+    function quit() {
+        demo.log.logMessage('Closing');
+
+        // "Notify" closing to main loop in a bad asynchronous way since
+        // Javascript is stupid
+        running = false;
+
+        gl = demo.graphics.getOpenGL();
+
+        gl.flush();
+        gl.finish();
+
+        requestAnimationFrame(function() {return;});
+
+        drone.free();
+
+        for (tile of tiles) {
+            tile.free();
+        }
+        demo.terrain.free();
+
+        gl.canvas.width = 1;
+        gl.canvas.height = 1;
     }
 
     init();
