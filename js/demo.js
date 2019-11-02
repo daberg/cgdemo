@@ -184,12 +184,12 @@ demo.main = function() {
         gl.flush();
         gl.finish();
 
-        requestAnimationFrame(function() {return;});
-
-        drone.free();
+        if (drone)
+            drone.free();
 
         for (tile of tiles) {
-            tile.free();
+            if (tile)
+                tile.free();
         }
         demo.terrain.free();
 
