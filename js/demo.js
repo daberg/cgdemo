@@ -13,7 +13,7 @@ demo.main = function() {
     var cameraElev = 35;
 
     var nearDist = 1;
-    var farDist = 10000;
+    var farDist = 5000;
     var verticalFov = 30;
 
     var drone;
@@ -26,7 +26,7 @@ demo.main = function() {
     var tileRowLen = 5;
     var tileColLen = 5;
     var tiles = new Array(tileRowLen * tileColLen);
-    var tileSize = [1500, 1500];
+    var tileSize = [2000, 2000];
 
     var lightAlpha = - utils.degToRad(75);  // Elev
     var lightBeta  = - utils.degToRad(270); // Angle
@@ -91,7 +91,7 @@ demo.main = function() {
 
         gl.viewport(0.0, 0.0, canvas.clientWidth, canvas.clientHeight);
 
-        gl.clearColor(0, 0.20, 0.40, 1.0);
+        gl.clearColor(0.79,1.00,0.90,1.0);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
         var aspectRatio = gl.canvas.width / gl.canvas.height;

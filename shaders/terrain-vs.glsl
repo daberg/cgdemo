@@ -15,10 +15,10 @@ out vec3 v_world_normal;
 out vec2 v_uv;
 
 void main() {
-    // Transform into world coordinates
+    // Calculate world coordinates
     v_world_pos = (v_w_matrix * vec4(v_model_pos, 1.0)).xyz;
 
-    // Transform it into projection coordinates
+    // Calculate projection coordinates
     gl_Position = v_wvp_matrix * vec4(v_model_pos, 1.0);
 
     // Transform normal into world coordinates
