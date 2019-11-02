@@ -19,7 +19,7 @@ vec3 phong(
     vec3 spec_col,
     float shininess
 ) {
-	vec3 refl = -reflect(light_dir, normal);
+	vec3 refl = - reflect(light_dir, normal);
 	return spec_col * light_col * pow(max(dot(refl, obs_dir), 0.0), shininess);
 }
 
@@ -39,8 +39,8 @@ out vec4 f_color;
 
 void main() {
     vec3 to_light = - normalize(light_dir);
-    vec3 to_obs = normalize(obs_w_pos);
-    vec3 normal = normalize(v_world_normal);
+    vec3 to_obs   =   normalize(obs_w_pos - v_world_pos);
+    vec3 normal   =   normalize(v_world_normal);
 
     vec3 diffuse = lambert(
         to_light,

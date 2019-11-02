@@ -28,8 +28,8 @@ demo.main = function() {
     var tiles = new Array(tileRowLen * tileColLen);
     var tileSize = [2000, 2000];
 
-    var lightAlpha = - utils.degToRad(75);  // Elev
-    var lightBeta  = - utils.degToRad(270); // Angle
+    var lightAlpha = utils.degToRad(315); // Elev
+    var lightBeta  = utils.degToRad(90); // Angle
     var lightDir = [
         Math.cos(lightAlpha) * Math.cos(lightBeta),
         Math.sin(lightAlpha),
@@ -102,13 +102,11 @@ demo.main = function() {
             nearDist,
             farDist
         );
-
         drawContext.vMatrix = utils.makeLookAt(
             camera.getPosition(),
             [drone.getX(), drone.getY(), drone.getZ()],
             [0, 1, 0]
         );
-
         drawContext.cameraPos = camera.getPosition();
 
         drone.draw(drawContext);

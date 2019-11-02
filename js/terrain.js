@@ -31,7 +31,6 @@ demo.terrain = (function (){
         var indices = indices;
         var numIndices = indices.length;
 
-
         var positionBuffer;
         var normalBuffer;
         var indexBuffer;
