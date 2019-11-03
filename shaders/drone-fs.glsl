@@ -42,6 +42,8 @@ void main() {
     vec3 to_obs   =   normalize(obs_w_pos - v_world_pos);
     vec3 normal   =   normalize(v_world_normal);
 
+    vec3 ambient = vec3(0.1, 0.1, 0.1);
+
     vec3 diffuse = lambert(
         to_light,
         light_color,
@@ -58,5 +60,5 @@ void main() {
         shininess
     );
 
-    f_color = vec4(clamp(diffuse + specular, 0.0, 1.0), 1.0);
+    f_color = vec4(clamp(ambient + diffuse + specular, 0.0, 1.0), 1.0);
 }
