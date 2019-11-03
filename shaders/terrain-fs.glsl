@@ -63,10 +63,11 @@ void main() {
 
     // Normal mapping
     vec3 texture_normal = texture(normal_sampler, v_uv).xyz * 2.0 - 1.0;
-    normal =
+    normal = normalize(
         + tangent  * texture_normal.x
         + binormal * texture_normal.y
-        + normal   * texture_normal.z;
+        + normal   * texture_normal.z
+    );
 
     vec3 diff_color = vec3(0.5, 0.5, 0.5);
 

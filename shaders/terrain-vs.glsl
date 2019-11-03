@@ -31,5 +31,5 @@ void main() {
     v_world_binormal = mat3(n_w_matrix) * v_model_binormal;
 
     // Calculate uv mapping
-    v_uv = v_world_pos.xz / 70.0;
+    v_uv = v_world_pos.xz / 60.0;
 }
