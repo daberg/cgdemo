@@ -1,21 +1,25 @@
 var demo = demo || {};
 
 demo.terrain = (function (){
-    var shaderPaths = [
-        "terrain-vs.glsl",
-        "terrain-fs.glsl"
-    ].map(name => demo.config.shaderDirPath + name);
     var noiseShaderPaths = [
         "terrain-nvs.glsl",
         "terrain-nfs.glsl"
     ].map(name => demo.config.shaderDirPath + name);
 
-    var texturePath = demo.config.textureDirPath + "/mountain.png";
+    var drawShaderPaths = [
+        "terrain-vs.glsl",
+        "terrain-fs.glsl"
+    ].map(name => demo.config.shaderDirPath + name);
+
+    var texturePaths = [
+        "terrain-color.png",
+        "terrain-normal.png"
+    ].map(name => demo.config.textureDirPath + name);
+
+    var textures;
 
     var noiseProgram;
     var drawProgram;
-
-    var texture;
 
     var pub = {};
 
@@ -33,6 +37,8 @@ demo.terrain = (function (){
 
         var positionBuffer;
         var normalBuffer;
+        var tangentBuffer;
+        var binormalBuffer;
         var indexBuffer;
 
         var wMatrix;
@@ -52,53 +58,55 @@ demo.terrain = (function (){
 
         var obsPosLocation;
 
+        var samplerLocations;
+
         this.loadModel = function() {
             // If an instance has already loaded our textures, we are done
-            if (texture)
+            if (textures)
                 return;
 
             var gl = demo.graphics.getOpenGL();
+            
+            textures = new Array();
+            var numTextures = texturePaths.length;
 
-            texture = gl.createTexture();
-            gl.bindTexture(gl.TEXTURE_2D, texture);
+            for (var texNum = 0; texNum < numTextures; texNum++) {
+                texture = gl.createTexture();
 
-            // Load temporary texture while waiting
-            gl.texImage2D(
-                gl.TEXTURE_2D,
-                0,
-                gl.RGBA,
-                1,
-                1,
-                0,
-                gl.RGBA,
-                gl.UNSIGNED_BYTE,
-                new Uint8Array([0, 0, 255, 255])
-            );
-
-            // Apply actual texture when it is ready
-            var image = new Image();
-            image.src = texturePath;
-            if ((new URL(texturePath)).origin !== window.location.origin) {
-                image.crossOrigin = "";
-            }
-            image.onload = function() {
+                textures.push(texture);
+                gl.activeTexture(gl.TEXTURE0);
                 gl.bindTexture(gl.TEXTURE_2D, texture);
                 gl.texImage2D(
-                    gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image
+                    gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA,
+                    gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 255])
                 );
-                gl.generateMipmap(gl.TEXTURE_2D);
-            };
+            }
+
+            utils.loadImages(
+                texturePaths,
+                function(images) {
+                    for (var texNum = 0; texNum < numTextures; texNum++) {
+                        gl.activeTexture(gl.TEXTURE0 + texNum);
+                        gl.bindTexture(gl.TEXTURE_2D, textures[texNum]);
+                        gl.texImage2D(
+                            gl.TEXTURE_2D, 0, gl.RGBA,
+                            gl.RGBA, gl.UNSIGNED_BYTE, images[texNum]
+                        );
+                        gl.generateMipmap(gl.TEXTURE_2D);
+                    }
+                }
+            );
         };
 
         this.loadShaders = function() {
             noiseProgram = noiseProgram || utils.loadShaders(
                 demo.graphics.getOpenGL(),
                 noiseShaderPaths,
-                ["v_out_pos", "v_normal"]
+                ["v_out_pos", "v_normal", "v_tangent", "v_binormal"]
             );
             drawProgram = drawProgram || utils.loadShaders(
                 demo.graphics.getOpenGL(),
-                shaderPaths
+                drawShaderPaths
             );
         };
 
@@ -115,6 +123,22 @@ demo.terrain = (function (){
 
             normalBuffer = gl.createBuffer();
             gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
+            gl.bufferData(
+                gl.ARRAY_BUFFER,
+                new Float32Array(vertices.length),
+                gl.STATIC_DRAW
+            );
+
+            tangentBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, tangentBuffer);
+            gl.bufferData(
+                gl.ARRAY_BUFFER,
+                new Float32Array(vertices.length),
+                gl.STATIC_DRAW
+            );
+
+            binormalBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, binormalBuffer);
             gl.bufferData(
                 gl.ARRAY_BUFFER,
                 new Float32Array(vertices.length),
@@ -148,6 +172,8 @@ demo.terrain = (function (){
 
             gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, positionBuffer);
             gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 1, normalBuffer);
+            gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 2, tangentBuffer);
+            gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 3, binormalBuffer);
 
             gl.enable(gl.RASTERIZER_DISCARD);
 
@@ -159,10 +185,11 @@ demo.terrain = (function (){
 
             gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, null);
             gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 1, null);
+            gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 2, null);
+            gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 3, null);
 
             gl.deleteBuffer(startPosBuffer);
 
-            //console.log(vertices);
             //// Sync before accessing buffers
             //var fence = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
             //gl.waitSync(fence, 0, gl.TIMEOUT_IGNORED);
@@ -171,12 +198,7 @@ demo.terrain = (function (){
             //gl.bindBuffer(gl.ARRAY_BUFFER, newPosBuffer);
             //gl.getBufferSubData(gl.ARRAY_BUFFER, 0, tmp1);
             //console.log(tmp1);
-            //// Log normal buffer
-            //var tmp2 = new Float32Array(vertices.length).fill(400);
-            //gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
-            //gl.getBufferSubData(gl.ARRAY_BUFFER, 0, tmp2);
-            //console.log(tmp2);
-            
+
             // Use new VAO
             vao = gl.createVertexArray();
             gl.bindVertexArray(vao);
@@ -201,6 +223,28 @@ demo.terrain = (function (){
             gl.enableVertexAttribArray(normalAttributeLocation);
             gl.vertexAttribPointer(
                 normalAttributeLocation, 3, gl.FLOAT, false, 0, 0
+            );
+
+            // Bind tangent buffer
+            gl.bindBuffer(gl.ARRAY_BUFFER, tangentBuffer);
+            // Initialize tangent attribute
+            var tangentAttributeLocation = gl.getAttribLocation(
+                drawProgram, "v_model_tangent"
+            );
+            gl.enableVertexAttribArray(tangentAttributeLocation);
+            gl.vertexAttribPointer(
+                tangentAttributeLocation, 3, gl.FLOAT, false, 0, 0
+            );
+ 
+            // Bind binormal buffer
+            gl.bindBuffer(gl.ARRAY_BUFFER, binormalBuffer);
+            // Initialize binormal attribute
+            var binormalAttributeLocation = gl.getAttribLocation(
+                drawProgram, "v_model_binormal"
+            );
+            gl.enableVertexAttribArray(binormalAttributeLocation);
+            gl.vertexAttribPointer(
+                binormalAttributeLocation, 3, gl.FLOAT, false, 0, 0
             );
 
             // Initialize index buffer
@@ -231,6 +275,14 @@ demo.terrain = (function (){
 
             obsPosLocation = gl.getUniformLocation(
                 drawProgram, 'obs_w_pos'
+            );
+
+            samplerLocations = new Array();
+            samplerLocations.push(
+                gl.getUniformLocation(drawProgram, "color_sampler")
+            );
+            samplerLocations.push(
+                gl.getUniformLocation(drawProgram, "normal_sampler")
             );
 
             gl.bindVertexArray(null);
@@ -285,8 +337,17 @@ demo.terrain = (function (){
 
             gl.uniform3fv(obsPosLocation, context.cameraPos);
 
-            gl.bindTexture(gl.TEXTURE_2D, texture);
+            for (var i = 0; i < samplerLocations.length; i++) {
+                gl.uniform1i(samplerLocations[i], i);
+            }
+
+            for (var i = 0; i < textures.length; i++) {
+                gl.activeTexture(gl.TEXTURE0 + i);
+                gl.bindTexture(gl.TEXTURE_2D, textures[i]);
+            }
+
             gl.bindVertexArray(vao);
+
             gl.drawElements(gl.TRIANGLES, numIndices, gl.UNSIGNED_INT, 0);
         };
 
@@ -390,9 +451,11 @@ demo.terrain = (function (){
     };
 
     pub.free = function() {
-        if (texture) {
-            gl.bindTexture(gl.TEXTURE_2D, null);
-            gl.deleteTexture(texture);
+        if (textures) {
+            for (texture of textures) {
+                gl.bindTexture(gl.TEXTURE_2D, null);
+                gl.deleteTexture(texture);
+            }
         }
     };
 

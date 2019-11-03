@@ -427,6 +427,8 @@ uniform vec2 tile_seed;
 
 out vec3 v_out_pos;
 out vec3 v_normal;
+out vec3 v_tangent;
+out vec3 v_binormal;
 
 void main() {
     // Displacement from the center of the tile
@@ -460,6 +462,8 @@ void main() {
     float height = noise.x - max_height;
     v_out_pos = vec3(v_in_pos.x, height, v_in_pos.z);
 
-    // Calculate normal from analytical derivatives
-    v_normal = normalize(vec3(-noise.y, 1.0, -noise.z));
+    // Calculate normal, tangent and binormal from analytical derivatives
+    v_normal   = normalize(vec3(-noise.y,      1.0, -noise.z));
+    v_tangent  = normalize(vec3(     1.0,  noise.y,      0.0));
+    v_binormal = normalize(vec3(     0.0,  noise.z,      1.0));
 }

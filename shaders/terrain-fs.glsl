@@ -36,6 +36,8 @@ vec3 fog(
 
 in vec3 v_world_pos;
 in vec3 v_world_normal;
+in vec3 v_world_tangent;
+in vec3 v_world_binormal;
 
 in vec2 v_uv;
 
@@ -44,15 +46,27 @@ uniform vec3 light_color;
 
 uniform vec3 obs_w_pos;
 
-uniform sampler2D sampler;
+uniform sampler2D color_sampler;
+uniform sampler2D normal_sampler;
 
 out vec4 f_color;
 
 void main() {
+    vec3  normal   =   normalize(v_world_normal);
+    vec3  tangent  =   normalize(v_world_tangent);
+    vec3  binormal =   normalize(v_world_binormal);
+
     vec3  to_light = - normalize(light_dir);
     vec3  to_obs   =   normalize(obs_w_pos - v_world_pos);
-    vec3  normal   =   normalize(v_world_normal);
-    float obs_dist =      length(obs_w_pos - v_world_pos);
+
+    float obs_dist =   length(obs_w_pos - v_world_pos);
+
+    // Normal mapping
+    vec3 texture_normal = texture(normal_sampler, v_uv).xyz * 2.0 - 1.0;
+    normal =
+        + tangent  * texture_normal.x
+        + binormal * texture_normal.y
+        + normal   * texture_normal.z;
 
     vec3 diff_color = vec3(0.5, 0.5, 0.5);
 
@@ -62,7 +76,7 @@ void main() {
     vec3 ambient_color = vec3(0.3, 0.3, 0.3);
 
     float tex_mix = 0.5;
-    vec3 tex_col = texture(sampler, v_uv).xyz;
+    vec3 tex_col = texture(color_sampler, v_uv).xyz;
 
     vec3 ambient = ambient_color * (1.0 - tex_mix) + tex_col * tex_mix;
 
@@ -82,7 +96,7 @@ void main() {
         shininess
     );
 
-    vec3 lighted = clamp(ambient + diffuse + specular, 0.0, 1.0);
+    vec3 out_color = clamp(ambient + diffuse + specular, 0.0, 1.0);
 
     // Best combinations so far:
     // dist = 2500  dens = 0.0006  grad = 3
@@ -91,14 +105,14 @@ void main() {
     // dist = 1000  dens = 0.0005  grad = 2
     // dist = 0     dens = 0.0004  grad = 5  (best result, performance ok)
     // dist = 0     dens = 0.0004  grad = 2
-    float fog_dist     = 2000.0;
+    float fog_dist     = 0.0;
     vec3  fog_color    = vec3(0.79, 1.00, 0.90);
-    float fog_density  = 0.0006;
-    float fog_gradient = 3.0;
+    float fog_density  = 0.0004;
+    float fog_gradient = 5.0;
 
     if (obs_dist > fog_dist) {
-        lighted = fog(
-            lighted,
+        out_color = fog(
+            out_color,
             fog_color,
             obs_dist - fog_dist,
             fog_density,
@@ -106,7 +120,7 @@ void main() {
         );
     }
 
-    f_color = vec4(lighted, 1.0);
+    f_color = vec4(out_color, 1.0);
 
     //f_color = vec4((normal + 1.0) / 2.0, 1.0);
 }

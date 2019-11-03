@@ -214,6 +214,36 @@ var utils = {
         return image;
     },
 
+    loadImage: function(url, callback) {
+        var image = new Image();
+        if ((new URL(url)).origin !== window.location.origin) {
+            image.crossOrigin = "";
+        }
+        image.src = url;
+        image.onload = callback;
+        return image;
+    },
+
+    // Taken from https://webglfundamentals.org
+    loadImages: function(urls, callback) {
+        var images = [];
+        var imagesToLoad = urls.length;
+
+        // Called each time an image finished loading.
+        var onImageLoad = function() {
+            --imagesToLoad;
+            // If all the images are loaded call the callback.
+            if (imagesToLoad == 0) {
+                callback(images);
+            }
+        };
+
+        for (var ii = 0; ii < imagesToLoad; ++ii) {
+            var image = this.loadImage(urls[ii], onImageLoad);
+            images.push(image);
+        }
+    },
+
     isPowerOfTwo: function(x) {
         return (x & (x - 1)) == 0;
     },
