@@ -9,7 +9,10 @@ demo.graphics = (function() {
         if (gl)
             return;
 
-        gl = canvas.getContext('webgl2');
+        gl = canvas.getContext(
+            'webgl2',
+            {alpha: false}
+        );
         if (!gl) {
             alert('Your browser does not support WebGL2 :(');
             throw new Error('WebGL2 not supported');
@@ -17,6 +20,8 @@ demo.graphics = (function() {
 
         gl.enable(gl.CULL_FACE);
         gl.enable(gl.DEPTH_TEST);
+        gl.enable(gl.BLEND);
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
     },
 
     pub.getOpenGL = function() {

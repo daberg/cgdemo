@@ -5,6 +5,12 @@ demo.drone = (function() {
         "drone-vs.glsl",
         "drone-fs.glsl"
     ].map(name => demo.config.shaderDirPath + name);
+    
+    var texturePaths = [
+        "drone-fan.png"
+    ].map(name => demo.config.textureDirPath + name);
+
+    var texture;
 
     var program = null;
 
@@ -16,30 +22,27 @@ demo.drone = (function() {
         var cz = 0;
         var yaw = 0;
 
-        var propSpeed = 1000.0;
+        var propSpeed = 100.0;
         var propDelta = propSpeed / demo.config.ticksPerSecond;
         var propRotDir = [1, -1, -1, 1];
         var propYaw = 50;
 
-        var bodyVertices;
-        var bodyIndices;
-        var bodyNormals;
+        var bodyVertices = new Array(3);
+        var bodyIndices  = new Array(3);
+        var bodyNormals  = new Array(3);
 
         var propVertices;
         var propIndices;
         var propNormals;
         var propTfs = new Array(4);
 
-        var numBodyIndices;
-        var numPropIndices;
-
         var wMatrix;
 
-        var diffColor;
-        var specColor;
-        var shininess;
+        var diffColor = new Array(3);
+        var specColor = new Array(3);
+        var shininess = new Array(3);
 
-        var bodyVao;
+        var bodyVao = new Array(3);
         var propVao;
 
         var wMatrixLocation;
@@ -55,31 +58,59 @@ demo.drone = (function() {
 
         var obsPosLocation;
 
+        var isPropBoolLocation;
+        var propSamplerLocation;
+
         var gpuBuffers = [];
 
         this.loadModel = function() {
             utils.get_json(
                 demo.config.modelDirPath + 'drone.json',
                 function(model) {
-                    bodyVertices = model.meshes[1].vertices;
-                    bodyIndices = [].concat.apply([], model.meshes[1].faces);
-                    bodyNormals = model.meshes[1].normals;
+                    for (var i = 0; i < 3; i++) {
+                        bodyVertices[i] = model.meshes[i+1].vertices;
+                        bodyIndices[i] = [].concat.apply(
+                            [], model.meshes[i+1].faces
+                        );
+                        bodyNormals[i] = model.meshes[i+1].normals;
+
+                        diffColor[i] = model.materials[i].properties[1].value;
+                        specColor[i] = model.materials[i].properties[4].value;
+                        shininess[i] = model.materials[i].properties[6].value;
+                    }
 
                     propVertices = model.meshes[0].vertices;
                     propIndices = [].concat.apply([], model.meshes[0].faces);
                     propNormals = model.meshes[0].normals;
 
-                    numBodyIndices = bodyIndices.length;
-                    numPropIndices = propIndices.length;
+                    propTfs[0] = model.rootnode.children[1].transformation;
+                    propTfs[1] = model.rootnode.children[2].transformation;
+                    propTfs[2] = model.rootnode.children[3].transformation;
+                    propTfs[3] = model.rootnode.children[4].transformation;
+                }
+            );
 
-                    propTfs[0] = model.rootnode.children[0].transformation;
-                    propTfs[1] = model.rootnode.children[1].transformation;
-                    propTfs[2] = model.rootnode.children[2].transformation;
-                    propTfs[3] = model.rootnode.children[3].transformation;
+            var gl = demo.graphics.getOpenGL();
 
-                    diffColor = model.materials[0].properties[1].value;
-                    specColor = model.materials[0].properties[4].value;
-                    shininess = model.materials[0].properties[6].value;
+            texture = gl.createTexture();
+
+            gl.activeTexture(gl.TEXTURE0);
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+            gl.texImage2D(
+                gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA,
+                gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 255])
+            );
+
+            utils.loadImages(
+                texturePaths,
+                function(images) {
+                    gl.activeTexture(gl.TEXTURE0);
+                    gl.bindTexture(gl.TEXTURE_2D, texture);
+                    gl.texImage2D(
+                        gl.TEXTURE_2D, 0, gl.RGBA,
+                        gl.RGBA, gl.UNSIGNED_BYTE, images[0]
+                    );
+                    gl.generateMipmap(gl.TEXTURE_2D);
                 }
             );
         };
@@ -94,57 +125,59 @@ demo.drone = (function() {
         this.initBuffers = function() {
             var gl = demo.graphics.getOpenGL();
 
-            // Body VAO
-            bodyVao = gl.createVertexArray();
-            gl.bindVertexArray(bodyVao);
+            for (var bodyNum = 0; bodyNum < 3; bodyNum++) {
+                // Body VAO
+                bodyVao[bodyNum] = gl.createVertexArray();
+                gl.bindVertexArray(bodyVao[bodyNum]);
 
-            // Initialize position buffer
-            var positionBuffer = gl.createBuffer();
-            gpuBuffers.push(positionBuffer);
-            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-            gl.bufferData(
-                gl.ARRAY_BUFFER,
-                new Float32Array(bodyVertices),
-                gl.STATIC_DRAW
-            );
-            // Initialize position attribute
-            var positionAttributeLocation = gl.getAttribLocation(
-                program, "v_model_pos"
-            );
-            gl.enableVertexAttribArray(positionAttributeLocation);
-            gl.vertexAttribPointer(
-                positionAttributeLocation, 3, gl.FLOAT, false, 0, 0
-            );
+                // Initialize position buffer
+                var positionBuffer = gl.createBuffer();
+                gpuBuffers.push(positionBuffer);
+                gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+                gl.bufferData(
+                    gl.ARRAY_BUFFER,
+                    new Float32Array(bodyVertices[bodyNum]),
+                    gl.STATIC_DRAW
+                );
+                // Initialize position attribute
+                var positionAttributeLocation = gl.getAttribLocation(
+                    program, "v_model_pos"
+                );
+                gl.enableVertexAttribArray(positionAttributeLocation);
+                gl.vertexAttribPointer(
+                    positionAttributeLocation, 3, gl.FLOAT, false, 0, 0
+                );
 
-            // Initialize normal buffer
-            var normalBuffer = gl.createBuffer();
-            gpuBuffers.push(normalBuffer);
-            gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
-            gl.bufferData(
-                gl.ARRAY_BUFFER,
-                new Float32Array(bodyNormals),
-                gl.STATIC_DRAW
-            );
-            // Initialize normal attribute
-            var normalAttributeLocation = gl.getAttribLocation(
-                program, "v_model_normal"
-            );
-            gl.enableVertexAttribArray(normalAttributeLocation);
-            gl.vertexAttribPointer(
-                normalAttributeLocation, 3, gl.FLOAT, false, 0, 0
-            );
+                // Initialize normal buffer
+                var normalBuffer = gl.createBuffer();
+                gpuBuffers.push(normalBuffer);
+                gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
+                gl.bufferData(
+                    gl.ARRAY_BUFFER,
+                    new Float32Array(bodyNormals[bodyNum]),
+                    gl.STATIC_DRAW
+                );
+                // Initialize normal attribute
+                var normalAttributeLocation = gl.getAttribLocation(
+                    program, "v_model_normal"
+                );
+                gl.enableVertexAttribArray(normalAttributeLocation);
+                gl.vertexAttribPointer(
+                    normalAttributeLocation, 3, gl.FLOAT, false, 0, 0
+                );
 
-            // Initialize index buffer
-            var indexBuffer = gl.createBuffer();
-            gpuBuffers.push(indexBuffer);
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-            gl.bufferData(
-                gl.ELEMENT_ARRAY_BUFFER,
-                new Uint16Array(bodyIndices),
-                gl.STATIC_DRAW
-            );
+                // Initialize index buffer
+                var indexBuffer = gl.createBuffer();
+                gpuBuffers.push(indexBuffer);
+                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+                gl.bufferData(
+                    gl.ELEMENT_ARRAY_BUFFER,
+                    new Uint16Array(bodyIndices[bodyNum]),
+                    gl.STATIC_DRAW
+                );
 
-            gl.bindVertexArray(null);
+                gl.bindVertexArray(null);
+            }
 
             // Propeller VAO
             propVao = gl.createVertexArray();
@@ -196,6 +229,9 @@ demo.drone = (function() {
                 gl.STATIC_DRAW
             );
 
+            gl.bindVertexArray(null);
+
+            // Get uniform locations
             wMatrixLocation = gl.getUniformLocation(program, "v_w_matrix");
             wvpMatrixLocation = gl.getUniformLocation(program, "v_wvp_matrix");
             nwMatrixLocation = gl.getUniformLocation(program, "n_w_matrix");
@@ -209,21 +245,15 @@ demo.drone = (function() {
 
             obsPosLocation = gl.getUniformLocation(program, 'obs_w_pos');
 
-            gl.bindVertexArray(null);
+            isPropBoolLocation = gl.getUniformLocation(program, 'is_prop');
+
+            propSamplerLocation = gl.getUniformLocation(program, 'prop_tex');
         };
 
         this.init = function() {
             this.loadModel();
             this.loadShaders();
             this.initBuffers();
-
-            // Free data from CPU memory
-            vertices = null;
-            indices = null;
-            normals = null;
-            propVertices = null;
-            propIndices = null;
-            propNormals = null;
 
             this.moveTo(0, 0, 0, 0);
         };
@@ -260,19 +290,38 @@ demo.drone = (function() {
                 utils.transposeMatrix(nwMatrix)
             );
 
-            gl.uniform3fv(diffColorLocation, diffColor);
-            gl.uniform3fv(specColorLocation, specColor);
-            gl.uniform1f(shininessLocation, shininess);
-
             gl.uniform3fv(lightDirLocation, context.lightDir);
             gl.uniform3fv(lightColorLocation, context.lightColor);
 
             gl.uniform3fv(obsPosLocation, context.cameraPos);
 
-            gl.bindVertexArray(bodyVao);
-            gl.drawElements(
-                gl.TRIANGLES, numBodyIndices, gl.UNSIGNED_SHORT, 0
-            );
+            // Draw body
+            gl.uniform1f(isPropBoolLocation, 0.0);
+
+            for (var bodyNum = 0; bodyNum < 3; bodyNum++) {
+                gl.uniform3fv(diffColorLocation, diffColor[bodyNum]);
+                gl.uniform3fv(specColorLocation, specColor[bodyNum]);
+                gl.uniform1f(shininessLocation, shininess[bodyNum]);
+
+                gl.bindVertexArray(bodyVao[bodyNum]);
+                gl.drawElements(
+                    gl.TRIANGLES,
+                    bodyIndices[bodyNum].length,
+                    gl.UNSIGNED_SHORT,
+                    0
+                );
+            }
+
+            // Draw propellers
+            gl.uniform1f(isPropBoolLocation, 1.0);
+
+            gl.uniform1i(propSamplerLocation, 0);
+            gl.activeTexture(gl.TEXTURE0);
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+
+            gl.uniform3fv(diffColorLocation, [0, 0, 0]);
+            gl.uniform3fv(specColorLocation, [0, 0, 0]);
+            gl.uniform1f(shininessLocation, 0);
 
             gl.bindVertexArray(propVao);
 
@@ -312,7 +361,7 @@ demo.drone = (function() {
                 );
 
                 gl.drawElements(
-                    gl.TRIANGLES, numPropIndices, gl.UNSIGNED_SHORT, 0
+                    gl.TRIANGLES, propIndices.length, gl.UNSIGNED_SHORT, 0
                 );
             }
         };

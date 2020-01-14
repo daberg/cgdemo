@@ -25,6 +25,7 @@ vec3 phong(
 
 in vec3 v_world_pos;
 in vec3 v_world_normal;
+in vec2 v_uv;
 
 uniform vec3 diff_color;
 uniform vec3 spec_color;
@@ -35,30 +36,49 @@ uniform vec3 light_color;
 
 uniform vec3 obs_w_pos;
 
+uniform bool is_prop;
+uniform sampler2D prop_tex;
+
 out vec4 f_color;
 
 void main() {
+    vec3 ambient_light = vec3(0.5, 0.5, 0.5);
+
+    vec3 main_color = diff_color;
+
     vec3 to_light = - normalize(light_dir);
     vec3 to_obs   =   normalize(obs_w_pos - v_world_pos);
     vec3 normal   =   normalize(v_world_normal);
 
-    vec3 ambient = vec3(0.1, 0.1, 0.1);
+    vec3 ambient = ambient_light * main_color;
 
-    vec3 diffuse = lambert(
-        to_light,
-        light_color,
-        normal,
-        diff_color
-    );
+    if (is_prop) {
+        float alpha_min = 0.0;
+        vec4 tex_col = texture(prop_tex, v_uv);
 
-    vec3 specular = phong(
-        to_light,
-        light_color,
-        normal,
-        to_obs,
-        spec_color,
-        shininess
-    );
+        f_color = vec4(
+            ambient + lambert(to_light, light_color, normal, tex_col.xyz),
+            tex_col.w * (1.0 - alpha_min) + alpha_min
+        );
+    }
 
-    f_color = vec4(clamp(ambient + diffuse + specular, 0.0, 1.0), 1.0);
+    else {
+        vec3 diffuse = lambert(
+            to_light,
+            light_color,
+            normal,
+            diff_color
+        );
+
+        vec3 specular = phong(
+            to_light,
+            light_color,
+            normal,
+            to_obs,
+            spec_color,
+            shininess
+        );
+
+        f_color = vec4(clamp(ambient + diffuse + specular, 0.0, 1.0), 1.0);
+    }
 }

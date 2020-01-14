@@ -52,6 +52,18 @@ uniform sampler2D normal_sampler;
 out vec4 f_color;
 
 void main() {
+    vec3 ambient_light = vec3(0.5, 0.5, 0.5);
+
+    vec3 diff_color = vec3(0.8, 0.6, 0.5);
+
+    vec3  spec_color = vec3(0.3, 0.3, 0.3);
+    float shininess = 5.0;
+
+    float tex_mix = 0.3;
+
+    vec3 tex_col = texture(color_sampler, v_uv).xyz;
+    vec3 main_color = diff_color * (1.0 - tex_mix) + tex_col * tex_mix;
+
     vec3  normal   =   normalize(v_world_normal);
     vec3  tangent  =   normalize(v_world_tangent);
     vec3  binormal =   normalize(v_world_binormal);
@@ -69,23 +81,13 @@ void main() {
         + normal   * texture_normal.z
     );
 
-    vec3 diff_color = vec3(0.5, 0.5, 0.5);
-
-    vec3 spec_color = vec3(0.3, 0.3, 0.3);
-    float shininess = 5.0;
-
-    vec3 ambient_color = vec3(0.3, 0.3, 0.3);
-
-    float tex_mix = 0.5;
-    vec3 tex_col = texture(color_sampler, v_uv).xyz;
-
-    vec3 ambient = ambient_color * (1.0 - tex_mix) + tex_col * tex_mix;
+    vec3 ambient = ambient_light * main_color;
 
     vec3 diffuse = lambert(
         to_light,
         light_color,
         normal,
-        diff_color * (1.0 - tex_mix) + tex_col * tex_mix
+        main_color
     );
 
     vec3 specular = phong(

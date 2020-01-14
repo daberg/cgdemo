@@ -109,11 +109,12 @@ demo.main = function() {
         );
         drawContext.cameraPos = camera.getPosition();
 
-        drone.draw(drawContext);
-
         for (tile of tiles) {
             tile.draw(drawContext);
         }
+
+        // Drone has to be drawn last because it has transparency
+        drone.draw(drawContext);
     }
 
     function tick() {
