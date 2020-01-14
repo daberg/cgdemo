@@ -257,6 +257,10 @@ var utils = {
     },
 
     /* Math */
+    
+    makeEqualIfBigger: (x, y) => x >= y ? y : x,
+
+    makeEqualIfSmaller: (x, y) => x <= y ? y : x,
 
     isInteger: function(number) {
         return number % 1 === 0;

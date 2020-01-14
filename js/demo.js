@@ -28,6 +28,12 @@ demo.main = function() {
     var tiles = new Array(tileRowLen * tileColLen);
     var tileSize = [2000, 2000];
 
+    var walls = [
+        (- tileRowLen * tileSize[0] / 5),
+        50,
+        (- tileColLen * tileSize[1] / 5)
+    ];
+
     var lightAlpha = utils.degToRad(315); // Elev
     var lightBeta  = utils.degToRad(90);  // Angle
     var lightDir = [
@@ -133,8 +139,20 @@ demo.main = function() {
             (demo.input.rwd - demo.input.lwd)
             * (demo.input.bwd ? -1 : 1)
             * droneYawDelta;
+        
+        newX   = drone.getX()   + dx;
+        newY   = drone.getY()   + dy;
+        newZ   = drone.getZ()   + dz;
+        newYaw = drone.getYaw() + dyaw;
 
-        drone.move(dx, dy, dz, dyaw);
+        newX = utils.makeEqualIfSmaller(newX, walls[0]);
+        newY = utils.makeEqualIfSmaller(newY, walls[1]);
+        newZ = utils.makeEqualIfSmaller(newZ, walls[2]);
+
+        newX = utils.makeEqualIfBigger(newX, - walls[0]);
+        newZ = utils.makeEqualIfBigger(newZ, - walls[2]);
+
+        drone.moveTo(newX, newY, newZ, newYaw);
 
         camera.setPosition(
             drone.getX() - droneDir[0] * cameraDist,
