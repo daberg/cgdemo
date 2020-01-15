@@ -23,6 +23,17 @@ vec3 phong(
 	return spec_col * light_col * pow(max(dot(refl, obs_dir), 0.0), shininess);
 }
 
+vec3 hemispheric(
+    vec3 up,
+    vec3 bottom_col,
+    vec3 top_col,
+    vec3 normal,
+    vec3 amb_col
+) {
+	float blend = (dot(normal, up) + 1.0) / 2.0;
+	return (top_col * blend + bottom_col * (1.0 - blend)) * amb_col;
+}
+
 in vec3 v_world_pos;
 in vec3 v_world_normal;
 in vec2 v_uv;
@@ -42,7 +53,8 @@ uniform sampler2D prop_tex;
 out vec4 f_color;
 
 void main() {
-    vec3 ambient_light = vec3(0.8, 0.8, 0.8);
+    vec3 ambient_lower_light = vec3(0.45, 0.38, 0.30);
+    vec3 ambient_upper_light = vec3(0.79, 0.85, 0.82);
 
     vec3 main_color = diff_color;
 
@@ -50,7 +62,13 @@ void main() {
     vec3 to_obs   =   normalize(obs_w_pos - v_world_pos);
     vec3 normal   =   normalize(v_world_normal);
 
-    vec3 ambient = ambient_light * main_color;
+    vec3 ambient = hemispheric(
+        vec3(0.0, 1.0, 0.0),
+        ambient_lower_light,
+        ambient_upper_light,
+        normal,
+        main_color
+    );
 
     if (is_prop) {
         vec4 tex_col = texture(prop_tex, v_uv);
@@ -68,7 +86,7 @@ void main() {
             to_light,
             light_color,
             normal,
-            diff_color
+            main_color
         );
 
         vec3 specular = phong(

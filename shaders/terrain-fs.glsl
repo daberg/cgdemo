@@ -23,6 +23,17 @@ vec3 phong(
 	return spec_col * light_col * pow(max(dot(refl, obs_dir), 0.0), shininess);
 }
 
+vec3 hemispheric(
+    vec3 up,
+    vec3 bottom_col,
+    vec3 top_col,
+    vec3 normal,
+    vec3 amb_col
+) {
+	float blend = (dot(normal, up) + 1.0) / 2.0;
+	return (top_col * blend + bottom_col * (1.0 - blend)) * amb_col;
+}
+
 vec3 fog(
     vec3 color,
     vec3 fog_color,
@@ -52,7 +63,8 @@ uniform sampler2D normal_sampler;
 out vec4 f_color;
 
 void main() {
-    vec3 ambient_light = vec3(0.8, 0.8, 0.8);
+    vec3 ambient_lower_light = vec3(0.45, 0.38, 0.30);
+    vec3 ambient_upper_light = vec3(0.79, 0.85, 0.82);
 
     vec3 diff_color = vec3(0.6, 0.5, 0.4);
 
@@ -81,7 +93,13 @@ void main() {
         + normal   * texture_normal.z
     );
 
-    vec3 ambient = ambient_light * main_color;
+    vec3 ambient = hemispheric(
+        vec3(0.0, 1.0, 0.0),
+        ambient_lower_light,
+        ambient_upper_light,
+        normal,
+        main_color
+    );
 
     vec3 diffuse = lambert(
         to_light,

@@ -26,9 +26,9 @@
 
 * Scan-line rendering + Phong shading (World Space)
 
-  * Main direct light source + ambient component
+  * Hemispheric ambient + main direct light source
 
-  * Lambert diffuse + Phong specular BRDF
+  * Ambient reflection + Lambert diffuse + Phong specular BRDF
 
 \vspace{15pt}
 
@@ -36,7 +36,7 @@
 
 \vspace{15pt}
 
-* User interaction through basic flight control
+* User interaction through basic flight controls
 
 # Implementation features
 
