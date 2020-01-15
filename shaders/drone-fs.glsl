@@ -42,7 +42,7 @@ uniform sampler2D prop_tex;
 out vec4 f_color;
 
 void main() {
-    vec3 ambient_light = vec3(0.5, 0.5, 0.5);
+    vec3 ambient_light = vec3(0.7, 0.7, 0.7);
 
     vec3 main_color = diff_color;
 
@@ -53,12 +53,13 @@ void main() {
     vec3 ambient = ambient_light * main_color;
 
     if (is_prop) {
-        float alpha_min = 0.0;
         vec4 tex_col = texture(prop_tex, v_uv);
 
+        vec3 diffuse = lambert(to_light, light_color, normal, tex_col.xyz);
+
         f_color = vec4(
-            ambient + lambert(to_light, light_color, normal, tex_col.xyz),
-            tex_col.w * (1.0 - alpha_min) + alpha_min
+            clamp(ambient + diffuse, 0.0, 1.0),
+            tex_col.w
         );
     }
 
