@@ -87,7 +87,7 @@ demo.main = function() {
 
         drone = new demo.drone.Drone();
         drone.init();
-        drone.moveTo(0, 0, 0, 0);
+        drone.moveTo(0, 300, 0, 0);
     }
 
     function draw() {
