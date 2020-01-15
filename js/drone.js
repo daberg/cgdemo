@@ -371,7 +371,7 @@ demo.drone = (function() {
             cy = newY;
             cz = newZ;
             yaw = (newYaw || 0) % 360.0;
-            wMatrix = utils.makeWorld(cx, cy, cz, 0, yaw, 0, 0.25);
+            wMatrix = utils.makeWorld(cx, cy, cz, 0, yaw, 0, 0.2);
         };
 
         this.move = function(dx, dy, dz, dyaw) {

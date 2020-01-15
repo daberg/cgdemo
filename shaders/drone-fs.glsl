@@ -42,7 +42,7 @@ uniform sampler2D prop_tex;
 out vec4 f_color;
 
 void main() {
-    vec3 ambient_light = vec3(0.7, 0.7, 0.7);
+    vec3 ambient_light = vec3(0.8, 0.8, 0.8);
 
     vec3 main_color = diff_color;
 

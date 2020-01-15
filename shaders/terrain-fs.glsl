@@ -52,9 +52,9 @@ uniform sampler2D normal_sampler;
 out vec4 f_color;
 
 void main() {
-    vec3 ambient_light = vec3(0.7, 0.7, 0.7);
+    vec3 ambient_light = vec3(0.8, 0.8, 0.8);
 
-    vec3 diff_color = vec3(0.8, 0.6, 0.5);
+    vec3 diff_color = vec3(0.6, 0.5, 0.4);
 
     vec3  spec_color = vec3(0.3, 0.3, 0.3);
     float shininess = 5.0;
@@ -62,7 +62,7 @@ void main() {
     float tex_mix = 0.7;
 
     vec3 tex_col = texture(color_sampler, v_uv).xyz;
-    vec3 main_color = diff_color * (1.0 - tex_mix) + tex_col * tex_mix;
+    vec3 main_color = mix(diff_color, tex_col, tex_mix);
 
     vec3  normal   =   normalize(v_world_normal);
     vec3  tangent  =   normalize(v_world_tangent);

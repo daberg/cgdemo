@@ -9,12 +9,12 @@ demo.main = function() {
     var timeDelta = 0;
 
     var camera = new demo.camera.Camera();
-    var cameraDist = 150;
-    var cameraElev = 35;
+    var cameraDist = 125;
+    var cameraElev = 40;
 
     var nearDist = 1;
     var farDist = 5000;
-    var verticalFov = 30;
+    var verticalFov = 50;
 
     var drone;
 
@@ -35,7 +35,7 @@ demo.main = function() {
     ];
 
     var lightAlpha = utils.degToRad(315); // Elev
-    var lightBeta  = utils.degToRad(90);  // Angle
+    var lightBeta  = utils.degToRad(15);  // Angle
     var lightDir = [
         Math.cos(lightAlpha) * Math.cos(lightBeta),
         Math.sin(lightAlpha),
