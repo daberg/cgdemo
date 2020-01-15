@@ -34,14 +34,19 @@ demo.main = function() {
         (- tileColLen * tileSize[1] / 5)
     ];
 
-    var lightAlpha = utils.degToRad(315); // Elev
-    var lightBeta  = utils.degToRad(15);  // Angle
-    var lightDir = [
-        Math.cos(lightAlpha) * Math.cos(lightBeta),
-        Math.sin(lightAlpha),
-        Math.cos(lightAlpha) * Math.sin(lightBeta)
+    var directLightAlpha = utils.degToRad(315); // Elev
+    var directLightBeta  = utils.degToRad(15);  // Angle
+    var directLightDir = [
+        Math.cos(directLightAlpha) * Math.cos(directLightBeta),
+        Math.sin(directLightAlpha),
+        Math.cos(directLightAlpha) * Math.sin(directLightBeta)
     ];
-    var lightColor = [0.7, 0.7, 0.7];
+    var directLightColor = [0.7, 0.7, 0.7];
+
+    var lowerAmbientColor = [0.45, 0.38, 0.30];
+    var upperAmbientColor = [0.79, 0.85, 0.82];
+
+    var skyColor = [0.79, 1.00, 0.90];
 
     var running = true;
 
@@ -51,8 +56,13 @@ demo.main = function() {
         this.vMatrix = null;
         this.pMatrix = null;
 
-        this.lightDir = lightDir;
-        this.lightColor = lightColor;
+        this.directLightDir   = directLightDir;
+        this.directLightColor = directLightColor;
+
+        this.skyColor = skyColor;
+
+        this.lowerAmbientColor = lowerAmbientColor;
+        this.upperAmbientColor = upperAmbientColor;
     })();
 
     function init() {
@@ -97,7 +107,7 @@ demo.main = function() {
 
         gl.viewport(0.0, 0.0, canvas.clientWidth, canvas.clientHeight);
 
-        gl.clearColor(0.79,1.00,0.90,1.0);
+        gl.clearColor(skyColor[0], skyColor[1], skyColor[2], 1.0);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
         var aspectRatio = gl.canvas.width / gl.canvas.height;

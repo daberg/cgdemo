@@ -56,6 +56,9 @@ demo.drone = (function() {
         var lightDirLocation;
         var lightColorLocation;
 
+        var ambientLowerColorLocation;
+        var ambientUpperColorLocation;
+
         var obsPosLocation;
 
         var isPropBoolLocation;
@@ -243,6 +246,14 @@ demo.drone = (function() {
             lightDirLocation = gl.getUniformLocation(program, 'light_dir');
             lightColorLocation = gl.getUniformLocation(program, 'light_color');
 
+            ambientLowerColorLocation = gl.getUniformLocation(
+                program, 'ambient_lower_color'
+            );
+
+            ambientUpperColorLocation = gl.getUniformLocation(
+                program, 'ambient_upper_color'
+            );
+
             obsPosLocation = gl.getUniformLocation(program, 'obs_w_pos');
 
             isPropBoolLocation = gl.getUniformLocation(program, 'is_prop');
@@ -290,8 +301,11 @@ demo.drone = (function() {
                 utils.transposeMatrix(nwMatrix)
             );
 
-            gl.uniform3fv(lightDirLocation, context.lightDir);
-            gl.uniform3fv(lightColorLocation, context.lightColor);
+            gl.uniform3fv(lightDirLocation,   context.directLightDir);
+            gl.uniform3fv(lightColorLocation, context.directLightColor);
+
+            gl.uniform3fv(ambientLowerColorLocation, context.lowerAmbientColor);
+            gl.uniform3fv(ambientUpperColorLocation, context.upperAmbientColor);
 
             gl.uniform3fv(obsPosLocation, context.cameraPos);
 

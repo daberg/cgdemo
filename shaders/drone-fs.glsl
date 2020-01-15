@@ -45,6 +45,9 @@ uniform float shininess;
 uniform vec3 light_dir;
 uniform vec3 light_color;
 
+uniform vec3 ambient_lower_color;
+uniform vec3 ambient_upper_color;
+
 uniform vec3 obs_w_pos;
 
 uniform bool is_prop;
@@ -53,9 +56,6 @@ uniform sampler2D prop_tex;
 out vec4 f_color;
 
 void main() {
-    vec3 ambient_lower_light = vec3(0.45, 0.38, 0.30);
-    vec3 ambient_upper_light = vec3(0.79, 0.85, 0.82);
-
     vec3 main_color = diff_color;
 
     vec3 to_light = - normalize(light_dir);
@@ -64,8 +64,8 @@ void main() {
 
     vec3 ambient = hemispheric(
         vec3(0.0, 1.0, 0.0),
-        ambient_lower_light,
-        ambient_upper_light,
+        ambient_lower_color,
+        ambient_upper_color,
         normal,
         main_color
     );

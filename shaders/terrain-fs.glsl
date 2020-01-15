@@ -55,6 +55,11 @@ in vec2 v_uv;
 uniform vec3 light_dir;
 uniform vec3 light_color;
 
+uniform vec3 ambient_lower_color;
+uniform vec3 ambient_upper_color;
+
+uniform vec3 sky_color;
+
 uniform vec3 obs_w_pos;
 
 uniform sampler2D color_sampler;
@@ -63,9 +68,6 @@ uniform sampler2D normal_sampler;
 out vec4 f_color;
 
 void main() {
-    vec3 ambient_lower_light = vec3(0.45, 0.38, 0.30);
-    vec3 ambient_upper_light = vec3(0.79, 0.85, 0.82);
-
     vec3 diff_color = vec3(0.6, 0.5, 0.4);
 
     vec3  spec_color = vec3(0.3, 0.3, 0.3);
@@ -95,8 +97,8 @@ void main() {
 
     vec3 ambient = hemispheric(
         vec3(0.0, 1.0, 0.0),
-        ambient_lower_light,
-        ambient_upper_light,
+        ambient_lower_color,
+        ambient_upper_color,
         normal,
         main_color
     );
@@ -127,7 +129,7 @@ void main() {
     // dist = 0     dens = 0.0004  grad = 5  (best result, performance ok)
     // dist = 0     dens = 0.0004  grad = 2
     float fog_dist     = 0.0;
-    vec3  fog_color    = vec3(0.79, 1.00, 0.90);
+    vec3  fog_color    = sky_color;
     float fog_density  = 0.0004;
     float fog_gradient = 5.0;
 

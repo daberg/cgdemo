@@ -56,6 +56,11 @@ demo.terrain = (function (){
         var lightDirLocation;
         var lightColorLocation;
 
+        var ambientLowerColorLocation;
+        var ambientUpperColorLocation;
+
+        var skyColorLocation;
+
         var obsPosLocation;
 
         var samplerLocations;
@@ -273,6 +278,18 @@ demo.terrain = (function (){
                 drawProgram, 'light_color'
             );
 
+            ambientLowerColorLocation = gl.getUniformLocation(
+                drawProgram, 'ambient_lower_color'
+            );
+
+            ambientUpperColorLocation = gl.getUniformLocation(
+                drawProgram, 'ambient_upper_color'
+            );
+
+            skyColorLocation = gl.getUniformLocation(
+                drawProgram, 'sky_color'
+            );
+
             obsPosLocation = gl.getUniformLocation(
                 drawProgram, 'obs_w_pos'
             );
@@ -332,8 +349,13 @@ demo.terrain = (function (){
                 utils.transposeMatrix(nwMatrix)
             );
 
-            gl.uniform3fv(lightDirLocation, context.lightDir);
-            gl.uniform3fv(lightColorLocation, context.lightColor);
+            gl.uniform3fv(lightDirLocation, context.directLightDir);
+            gl.uniform3fv(lightColorLocation, context.directLightColor);
+
+            gl.uniform3fv(ambientLowerColorLocation, context.lowerAmbientColor);
+            gl.uniform3fv(ambientUpperColorLocation, context.upperAmbientColor);
+
+            gl.uniform3fv(skyColorLocation, context.skyColor);
 
             gl.uniform3fv(obsPosLocation, context.cameraPos);
 
