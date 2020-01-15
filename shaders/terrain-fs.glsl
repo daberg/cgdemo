@@ -126,12 +126,12 @@ void main() {
     // dist = 2000  dens = 0.0006  grad = 3  (best trade-off)
     // dist = 1500  dens = 0.0006  grad = 2
     // dist = 1000  dens = 0.0005  grad = 2
-    // dist = 0     dens = 0.0004  grad = 5  (best result, performance ok)
+    // dist = 0     dens = 0.0004  grad = 6  (best result, performance ok)
     // dist = 0     dens = 0.0004  grad = 2
     float fog_dist     = 0.0;
     vec3  fog_color    = sky_color;
     float fog_density  = 0.0004;
-    float fog_gradient = 5.0;
+    float fog_gradient = 6.0;
 
     if (obs_dist > fog_dist) {
         out_color = fog(

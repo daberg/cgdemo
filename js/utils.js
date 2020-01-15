@@ -256,6 +256,15 @@ var utils = {
         return x + 1;
     },
 
+    desaturate: function(rgb, factor) {
+        luma = 0.3 * rgb[0] + 0.6 * rgb[1] + 0.1 * rgb[2];
+        return [
+            rgb[0] + factor * (luma - rgb[0]),
+            rgb[1] + factor * (luma - rgb[1]),
+            rgb[2] + factor * (luma - rgb[2])
+        ];
+    },
+
     /* Math */
     
     makeEqualIfBigger: function(x, y) { return x >= y ? y : x },

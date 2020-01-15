@@ -46,7 +46,8 @@ demo.main = function() {
     var lowerAmbientColor = [0.45, 0.38, 0.30];
     var upperAmbientColor = [0.79, 0.85, 0.82];
 
-    var skyColor = [0.79, 1.00, 0.90];
+    var skyColor = [0.82, 0.98, 0.90];
+    upperAmbientColor = utils.desaturate(skyColor, 0.6);
 
     var running = true;
 
