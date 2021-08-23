@@ -1,3 +1,7 @@
+/* Adapted from a source file supplied by Politecnico di Milano.
+ * All rights belong to their respective owners.
+ */
+
 var utils = {
     loadFile: function (url, data, callback, errorCallback) {
         var request = new XMLHttpRequest();
