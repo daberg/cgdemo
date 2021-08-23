@@ -1,0 +1,4 @@
+variables:
+  documentclass: beamer
+  classoption:
+    - handout
